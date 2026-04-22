@@ -5,8 +5,24 @@
 body{
     background-color: var(--baby-blue-color);
     height: 100vh;
+}
 
-    display: grid;
+#tamagotchiBackground{                        
+    #egg-shape-background{
+        width: 20vw;
+        z-index: -2;
+        img{
+            fill: #FAB95B;
+        }
+    }
+    #breaking-egg-shape-backgroud{
+        width: 15vw;
+        z-index: -1;
+    }
+}
+
+#tamagotchiScreen{
+    display: none;
     grid-template-columns: 1fr 2fr 4fr 2fr 1fr;
     grid-template-rows: 1fr 2fr 6fr 2fr 1fr;
     grid-template-areas: ". . . . ."
@@ -14,55 +30,56 @@ body{
                          ". . gameSection . ."
                          ". . gameButtonsSection . ."
                          ". . . . .";
-}
 
-#gameSection{
-    grid-area: gameSection;
-    justify-self: center;
-    width: 50%;
-    display: flex;
-    flex-direction: column;
-    background-color: white;
-
-    #statusBarWrapper{
+    #gameSection{
+        grid-area: gameSection;
+        justify-self: center;
+        width: 50%;
         display: flex;
-        flex-direction: row;
-      
-        justify-content: space-around;
-        height: 20%;
-
-        #hungerWrapper, #energyWrapper, #happinessWrapper{
-            text-align: center;
-            width: 33%;
-        }
-
-        #hungerBar, #energyBar, #happinessBar{
-            border: black 1px solid;
-            margin: 0% 10%;
+        flex-direction: column;
+        background-color: white;
+    
+        #statusBarWrapper{
+            display: flex;
+            flex-direction: row;
+          
+            justify-content: space-around;
             height: 20%;
+    
+            #hungerWrapper, #energyWrapper, #happinessWrapper{
+                text-align: center;
+                width: 33%;
+            }
+    
+            #hungerBar, #energyBar, #happinessBar{
+                border: black 1px solid;
+                margin: 0% 10%;
+                height: 20%;
+            }
+        }
+    
+        #homeSection{
+            height: 100%;
+            background-color: palegreen;
         }
     }
-
-    #homeSection{
-        height: 100%;
-        background-color: palegreen;
+    
+    #gameButtonsSection{
+        grid-area: gameButtonsSection;
+        display: grid;
+        grid-template-columns: 3fr 1fr 1fr 1fr 3fr;
+        grid-template-areas: ". previousRoom selectButton nextRoom .";
+    
+        #previousRoom{grid-area: previousRoom;}
+        #selectButton{grid-area: selectButton;}
+        #nextRoom{grid-area: nextRoom;}
+    
+        #previousRoom, #selectButton, #nextRoom{
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+        }
     }
 }
 
-#gameButtonsSection{
-    grid-area: gameButtonsSection;
-    display: grid;
-    grid-template-columns: 3fr 1fr 1fr 1fr 3fr;
-    grid-template-areas: ". previousRoom selectButton nextRoom .";
-
-    #previousRoom{grid-area: previousRoom;}
-    #selectButton{grid-area: selectButton;}
-    #nextRoom{grid-area: nextRoom;}
-
-    #previousRoom, #selectButton, #nextRoom{
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        border: none;
-    }
-}
