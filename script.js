@@ -21,6 +21,15 @@ const btnRight = document.getElementById('rightBtn');
 3 = happiness */
 let currentSelection = 1;
 
+// creatures 
+let petSpecies = [cat, dog] // more added later?
+
+let pet = {
+    hunger: 80,
+    energy: 80,
+    happiness: 80
+}
+
 /* ======================
     core UI functions
 ====================== */
@@ -45,10 +54,6 @@ const checkSelection = () => { // add selection to status bars as well
     button functionality
 ========================= */
 // multi-functional buttons based on UI
-btnLeft.addEventListener('click', pressedLeft);
-btnCenter.addEventListener('click', pressedCenter);
-btnRight.addEventListener('click', pressedRight);
-
 const pressedLeft = () => {
     if (currentSelection <= 1) {
         currentSelection = 3
@@ -67,6 +72,21 @@ const pressedRight = () => {
     checkSelection();
 }
 
+const pressedCenter = () => {
+    if (currentSelection === 1) { // hunger
+        
+    } else if (currentSelection === 2) { // energy
+       
+    } else if (currentSelection === 3) { // happiness
+        
+    } else { // debug test for errors
+        
+    }
+}
+
+btnLeft.addEventListener('click', pressedLeft);
+btnCenter.addEventListener('click', pressedCenter);
+btnRight.addEventListener('click', pressedRight);
 /* ==============================
     clean start after refresh
 ============================== */
