@@ -24,8 +24,7 @@ body{
     flex-direction: column;
     background-color: white;
 
-    #statusBarWrapper,
-    #bubbleWrapper {
+    #statusBarWrapper {
         display: flex;
         flex-direction: row;
       
