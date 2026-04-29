@@ -128,16 +128,19 @@ const updateTime = () => {
     currentDate = new Date();
     let timeOfDay = currentDate.toTimeString();
 
-    let currentHour = timeOfDay.slice(0, 2);
+    let currentHour = parseInt(timeOfDay.slice(0, 2));
     clock = timeOfDay.slice(0, 5);
 
-    if (currentHour >=6 || currentHour <= 18) {
+    // currentHour += 8; // Debug number
+
+    if (currentHour >= 6 && currentHour <= 18) {
         ToD = 'Daytime';
     } else if (currentHour <= 22) {
         ToD = 'Evening';
     } else {
         ToD = 'Nighttime';
     }
+    console.log(`It's ${ToD} - Time:${currentHour}`);
 }
 
 /* ======================
