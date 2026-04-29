@@ -7,79 +7,103 @@ body{
     height: 100vh;
 }
 
-#tamagotchiBackground{                        
+#tamagotchiBackground{ 
+    justify-self: center;
+    align-self: center;
+    height: 100%;
+    position: relative;
+    width: 38vw;
+    
     #egg-shape-background{
-        width: 20vw;
-        z-index: -2;
+        filter: drop-shadow(0 0 10px #c58c3d);
+        position: relative;
+        height: auto;
+        width: 100%;
+    }
+    #breaking-egg-shape-background{
         img{
-            fill: #FAB95B;
+            filter: drop-shadow(0 0 5px #17294b);
         }
-    }
-    #breaking-egg-shape-backgroud{
-        width: 15vw;
-        z-index: -1;
-    }
-}
-
-#tamagotchiScreen{
-    display: none;
-    grid-template-columns: 1fr 2fr 4fr 2fr 1fr;
-    grid-template-rows: 1fr 2fr 6fr 2fr 1fr;
-    grid-template-areas: ". . . . ."
-                         ". . . . ."
-                         ". . gameSection . ."
-                         ". . gameButtonsSection . ."
-                         ". . . . .";
-
-    #gameSection{
-        grid-area: gameSection;
-        justify-self: center;
-        width: 50%;
-        display: flex;
-        flex-direction: column;
-        background-color: white;
-    
-        #statusBarWrapper{
-            display: flex;
-            flex-direction: row;
-          
-            justify-content: space-around;
-            height: 20%;
-    
-            #hungerWrapper, #energyWrapper, #happinessWrapper{
-                text-align: center;
-                width: 33%;
-            }
-    
-            #hungerBar, #energyBar, #happinessBar{
-                border: black 1px solid;
-                margin: 0% 10%;
-                height: 20%;
-            }
-        }
-    
-        #homeSection{
+        position:absolute;
+        top: 20%;
+        width: 30vw;
+        left: 10%;
+        #tamagotchiScreen{
+            position: absolute;
+            top: 0;
+            display: grid;
+            width: 100%;
             height: 100%;
-            background-color: palegreen;
+            grid-template-columns: 1.5fr 2fr 4fr 2fr 1.5fr;
+            grid-template-rows: 1.5fr 6fr 3fr;
+            grid-template-areas: ". . . . ."
+                                ". gameSection gameSection gameSection ."
+                                ". . . . .";
+
+            #gameSection{
+                grid-area: gameSection;
+                justify-self: center;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                background-color: #605B51;
+                border-radius: 10px;
+                box-shadow: inset #454040 0 0 10px 5px;
+            
+                #statusBarWrapper{
+                    display: flex;
+                    flex-direction: row;
+                
+                    justify-content: space-around;
+                    height: 20%;
+                    border-bottom: black solid 1px;
+            
+                    #hungerWrapper, #energyWrapper, #happinessWrapper{
+                        text-align: center;
+                        width: 33%;
+                    }
+            
+                    #hungerBar, #energyBar, #happinessBar{
+                        border: black 1px solid;
+                        margin: 0% 10%;
+                        height: 20%;
+                    }
+                }
+            
+                #homeSection{
+                    height: 100%;
+                    background-color: #605B51;
+                    border-radius: 0 0 10px 10px;
+                    box-shadow: inset #454040 0 -10px 10px 5px;
+                }
+            }
+            
         }
-    }
-    
-    #gameButtonsSection{
-        grid-area: gameButtonsSection;
-        display: grid;
-        grid-template-columns: 3fr 1fr 1fr 1fr 3fr;
-        grid-template-areas: ". previousRoom selectButton nextRoom .";
-    
-        #previousRoom{grid-area: previousRoom;}
-        #selectButton{grid-area: selectButton;}
-        #nextRoom{grid-area: nextRoom;}
-    
-        #previousRoom, #selectButton, #nextRoom{
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            border: none;
+
+        #gameButtonsSection{
+            display: grid;
+            column-gap: 4vw;
+            grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
+            grid-template-rows: 1fr 1fr ;
+            grid-template-areas: ". previousRoom . nextRoom ."
+            ". . selectButton . .";
+            
+            #previousRoom{grid-area: previousRoom;}
+            #selectButton{grid-area: selectButton;}
+            #nextRoom{grid-area: nextRoom;}
+            
+            #previousRoom, #selectButton, #nextRoom{
+                filter: none;
+                align-self: center;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                border: rgb(211, 208, 208) solid 1px;
+                box-shadow: 0 0 10px black ;
+            }
         }
     }
 }
+
+
 
