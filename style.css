@@ -132,6 +132,18 @@ body{
                         }
                     }
 
+                    #petWrapper{
+                        margin: 0 auto;
+
+                        #petSprite{
+                            height: 200px;
+                            width: 150px;
+                            
+                            background-repeat: no-repeat;
+                            background-size: 410%;
+                        }
+                    }
+
                     #logBar {
                         background-color: #000;
                         color: #605B51;
