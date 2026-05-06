@@ -7,6 +7,14 @@ body{
     height: 100vh;
 }
 
+.hidden {
+    visibility: hidden;
+}
+
+.selected {
+    background-color: #d6ff2185 !important;
+}
+
 #tamagotchiBackground{ 
     justify-self: center;
     align-self: center;
@@ -29,6 +37,7 @@ body{
         width: 30vw;
         left: 10%;
         #tamagotchiScreen{
+            pointer-events: none;
             position: absolute;
             top: 0;
             display: grid;
@@ -61,13 +70,39 @@ body{
                     #hungerWrapper, #energyWrapper, #happinessWrapper{
                         text-align: center;
                         width: 33%;
+
+                        p{
+                            margin: 6px;
+                        }
+                    }
+
+                    #hungerWrapper{
+                        border-top-left-radius: 10px;
+                    }
+
+                    #happinessWrapper{
+                        border-top-right-radius: 10px;
+                    }                
+
+                    #energyWrapper {
+                        border-left: black solid 1px;
+                        border-right: black solid 1px;
+                    }
+
+                    .barWrapper {
+                        width: 95px;
+                        border: #000 1px solid;
+                        margin: 0 10%;
+                        height: 10px;
+                        border-radius: 10px;
                     }
             
                     #hungerBar, #energyBar, #happinessBar{
-                        border: black 1px solid;
-                        margin: 0% 10%;
-                        height: 20%;
+                        height: 10px;
+                        overflow: hidden;
+                        border-radius: 10px;
                     }
+                    
                 }
             
                 #homeSection{
@@ -75,9 +110,26 @@ body{
                     background-color: #605B51;
                     border-radius: 0 0 10px 10px;
                     box-shadow: inset #454040 0 -10px 10px 5px;
+
+                    #bubbleWrapper{
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        justify-items: center;
+
+                        .alertBubble {
+                            font-size: 13px;
+                            font-weight: bold;
+
+                            padding: 2px 8px;
+                            margin-top: 10px;
+
+                            color: #605B51;
+                            background-color: #000;
+                            border-radius: 15px;
+                        }
+                    }
                 }
-            }
-            
+            }            
         }
 
         #gameButtonsSection{
@@ -87,6 +139,7 @@ body{
             grid-template-rows: 1fr 1fr ;
             grid-template-areas: ". previousRoom . nextRoom ."
             ". . selectButton . .";
+        
             
             #previousRoom{grid-area: previousRoom;}
             #selectButton{grid-area: selectButton;}
@@ -100,6 +153,20 @@ body{
                 border-radius: 50%;
                 border: rgb(211, 208, 208) solid 1px;
                 box-shadow: 0 0 10px black ;
+            }
+
+            #previousRoom, #nextRoom{
+                background-color:#605B51;
+            }       
+
+            i {
+                font-size: 50px;
+                color: #fff;
+                margin: -2px 0px 0 -12px;
+            }
+
+            i:hover {
+                color: #d1d1d1;
             }
         }
     }

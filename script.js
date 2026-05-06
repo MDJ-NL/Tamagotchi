@@ -9,10 +9,15 @@ const happinessContainer = document.getElementById('happinessWrapper');
 // status bars
 const hungerBar = document.getElementById('hungerBar');
 const energyBar = document.getElementById('energyBar');
-const happinessBar = document.getElementById('happinessBar');
+const happinessBar = document.getElementById('happinessBar')
+/*
 const green = '#a3db3a';
 const yellow = '#d4bd6f';
 const red = '#fa6f6a';
+*/
+const green = '#000';
+const yellow = '#000';
+const red = '#000';
 
 // main window
 const mainBG = document.getElementById('homeSection')
@@ -23,22 +28,11 @@ const btnCenter = document.getElementById('selectButton');
 const btnRight = document.getElementById('nextRoom');
 
 // status alerts
-const bubbleWrapper = document.createElement('div'); // can addded in HTML
-bubbleWrapper.setAttribute('id', 'bubbleWrapper');
-mainBG.appendChild(bubbleWrapper);
+const bubbleWrapper = document.getElementById('bubbleWrapper');
 
-const hungryBubble = document.createElement('div');
-const tiredBubble = document.createElement('div');
-const unhappyBubble = document.createElement('div');
-
-hungryBubble.setAttribute('class', 'alertBubble hungry');
-hungryBubble.innerHTML = 'Feed me!';
-
-tiredBubble.setAttribute('class', 'alertBubble tired');
-tiredBubble.innerHTML = 'I need rest!';
-
-unhappyBubble.setAttribute('class', 'alertBubble unhappy');
-unhappyBubble.innerHTML = 'Play with me!';
+const hungryBubble = document.getElementById('hungry');
+const tiredBubble = document.getElementById('tired');
+const unhappyBubble = document.getElementById('unhappy');
 
 /* ==============
     Gamestate
@@ -148,30 +142,22 @@ const updateTime = () => {
 ====================== */
 const checkSelection = () => { // add selection to status bars as well
     // clear all selections
-    hungerContainer.style.border = '';
-    hungerContainer.style.backgroundColor = '';
-
-    energyContainer.style.border = '';
-    energyContainer.style.backgroundColor = '';
-
-    happinessContainer.style.border = '';
-    happinessContainer.style.backgroundColor = '';
+    hungerContainer.classList.remove('selected');
+    energyContainer.classList.remove('selected');
+    happinessContainer.classList.remove('selected');
 
     // mark current selected room
     if (currentRoom === 1) { // hunger
-        mainBG.style.background = feedRoom;
-        hungerContainer.style.border = '2px solid #aaee7c';
-        hungerContainer.style.backgroundColor = '#d0ff0065';
+        //mainBG.style.background = feedRoom;
+        hungerContainer.classList.add('selected');
 
     } else if (currentRoom === 2) { // energy
-        mainBG.style.background = bedRoom;
-        energyContainer.style.border = '2px solid #aaee7c';
-        energyContainer.style.backgroundColor = '#d0ff0065';
+        //mainBG.style.background = bedRoom;
+        energyContainer.classList.add('selected');
 
     } else if (currentRoom === 3) { // happiness
-        mainBG.style.background = playRoom;
-        happinessContainer.style.border = '2px solid #aaee7c';
-        happinessContainer.style.backgroundColor = '#d0ff0065';
+        //mainBG.style.background = playRoom;
+        happinessContainer.classList.add('selected');
 
     } else { // debug test for errors, can be deleted later
         mainBG.style.background = "#b44343";
@@ -258,21 +244,21 @@ const updateHappinessBar = () => {
 
 const updateAlerts = () => {
     if (pet.hungry) {
-        bubbleWrapper.appendChild(hungryBubble);
+        hungryBubble.classList.remove('hidden');
         } else {
-            hungryBubble.remove();
+            hungryBubble.classList.add('hidden');
     }
 
      if (pet.tired) {
-        bubbleWrapper.appendChild(tiredBubble);
+        tiredBubble.classList.remove('hidden');
         } else {
-            tiredBubble.remove();
+            tiredBubble.classList.add('hidden');
     }
 
     if (pet.unhappy) {
-        bubbleWrapper.appendChild(unhappyBubble);
+        unhappyBubble.classList.remove('hidden');
         } else {
-            unhappyBubble.remove();
+            unhappyBubble.classList.add('hidden');
     }
 }
 

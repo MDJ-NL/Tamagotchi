@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tamagotchi</title>
     <link rel="stylesheet" href="./style.css">
+    <script src="https://kit.fontawesome.com/bd6d25e44b.js" crossorigin="anonymous"></script>
     <script src="./script.js" defer></script>
 </head>
 <body>
@@ -19,30 +20,40 @@
                     <div id="statusBarWrapper">
                         <div id="hungerWrapper">
                             <p>Hunger</p>
-                            <div>
+                            <div class="barWrapper">
                                 <div id="hungerBar"></div>
                             </div>
                         </div>
                         <div id="energyWrapper">
                             <p>Energy</p>
-                            <div>
+                            <div class="barWrapper">
                                 <div id="energyBar"></div>
                             </div>
                         </div>
                         <div id="happinessWrapper">
                             <p>Happiness</p>
-                            <div>
+                            <div class="barWrapper">
                                 <div id="happinessBar"></div>
                             </div>
                         </div>
                     </div>
-                    <div id="homeSection"></div>
+                    <div id="homeSection">
+                        <div id='bubbleWrapper'>
+                            <div id='hungry' class='alertBubble hungry hidden'>Feed me!</div>
+                            <div id="tired" class='alertBubble tired hidden'>I need rest!</div>
+                            <div id="unhappy" class='alertBubble unhappy hidden'>Play with me!</div>
+                        </div>
+                    </div>
                 </section>
             </section> 
             <section id="gameButtonsSection">
-                <button id="previousRoom"><</button>
+                <button id="previousRoom">
+                    <i class="fas fa-arrow-circle-left"></i>
+                </button>
                 <button id="selectButton"></button>
-                <button id="nextRoom">></button>
+                <button id="nextRoom">
+                    <i class="fas fa-arrow-circle-right"></i>
+                </button>
             </section>
         </div>
     </section> 
