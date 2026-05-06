@@ -34,9 +34,9 @@ const hungryBubble = document.getElementById('hungry');
 const tiredBubble = document.getElementById('tired');
 const unhappyBubble = document.getElementById('unhappy');
 
-/* ==============
-    Gamestate
-============== */
+//pet div
+const petSprite = document.getElementById('petSprite');
+
 /* selected room
 1 = hunger
 2 = energy
@@ -46,19 +46,25 @@ const feedRoom = '#adccdf';
 const bedRoom = '#addb79';
 const playRoom = '#e6b3cc';
 // creatures (unused currently)
-let petSpecies = ['cat', 'dog', 'bunny'] // more added later?
+let petSpecies = {
+    cat: "url('./assets/pet one sprites.png')",
+    dog: "",
+    bunny: ""
+}
 
 let pet = {
-    hunger: 80,
-    energy: 80,
-    happiness: 80,
-    hungry: false,
-    tired: false,
-    unhappy: false,
-    mood: 3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
-    age: 0,
-    alive: true,
-    name: 'placeholderName'
+    hunger:     80,
+    energy:     80,
+    happiness:  80,
+    hungry:     false,
+    tired:      false,
+    unhappy:    false,
+    mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
+    age:        0,
+    alive:      true,
+    idle:       true,
+    pose:       1,
+    name:       'placeholderName'
 }
 
 let tick = 0;
@@ -73,6 +79,8 @@ let clock = '00:00'
 const saveToLocalStorage = () => {
     let petState = JSON.stringify(pet);
     saveDate = new Date();
+    
+    //localStorage.clear();
 
     localStorage.setItem('petState', petState);
     localStorage.setItem('savedDate', saveDate);
@@ -137,6 +145,47 @@ const updateTime = () => {
     console.log(`It's ${ToD} - Time:${currentHour}`);
 }
 
+/* ============
+    Display
+============ */
+const idleAnim = () => {
+    setInterval(() => {
+        if (pet.pose === 1)  {
+            pet.pose = 2;
+        } else {
+            pet.pose = 1;
+        }
+        updatePet();
+    }, 750);
+}
+
+const updatePet = () => {
+    if (!pet.alive) return;
+    petSprite.style.backgroundImage = petSpecies.cat;
+
+    //animation values
+    let Idle1 = '-10px 0px';
+    let idle2 = '-215px 0px';
+
+    // -205 horizontal
+    // -xx vertical
+    if (pet.idle) {
+        if (pet.pose === 1) {
+            petSprite.style.backgroundPosition = Idle1;
+        } else {
+            petSprite.style.backgroundPosition = idle2;
+        }
+    } else if (pet.hungry) {
+        console.log('hunger');
+    } else if (pet.energy) {
+        console.log('energy');
+    } else if (pet.happiness) {
+        console.log('happiness');
+    } else {
+        console.log('anim state not found');
+    }
+}
+
 /* ======================
     core UI functions
 ====================== */
@@ -183,6 +232,7 @@ function gameLoop() {
 
     updateTime();
     updateUI();
+    updatePet()
 }
 
 /* ==============================
@@ -322,6 +372,7 @@ const init = () => {
     updateUI();
     setInterval(gameLoop, 1000);
     setInterval(saveToLocalStorage, 300000); // 5min periodic save
+    idleAnim();
 }
 
 init();
