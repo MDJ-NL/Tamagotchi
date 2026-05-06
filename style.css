@@ -23,6 +23,21 @@ body{
     #breaking-egg-shape-background{
         img{
             filter: drop-shadow(0 0 5px #17294b);
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+
+    #statusBarWrapper {
+        display: flex;
+        flex-direction: row;
+      
+        justify-content: space-around;
+        height: 20%;
+
+        #hungerWrapper, #energyWrapper, #happinessWrapper{
+            text-align: center;
+            width: 33%;
         }
         position:absolute;
         top: 20%;
