@@ -110,6 +110,9 @@ body{
                     background-color: #605B51;
                     border-radius: 0 0 10px 10px;
                     box-shadow: inset #454040 0 -10px 10px 5px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
 
                     #bubbleWrapper{
                         display: grid;
@@ -127,6 +130,18 @@ body{
                             background-color: #000;
                             border-radius: 15px;
                         }
+                    }
+
+                    #logBar {
+                        background-color: #000;
+                        color: #605B51;
+
+                        text-align: center;
+
+                        border-radius: 10px;
+                        width: 75%;
+                        
+                        margin: 0 auto 5px auto;
                     }
                 }
             }            
