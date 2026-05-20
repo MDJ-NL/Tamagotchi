@@ -1,5 +1,6 @@
 :root{
     --baby-blue-color: #BBDCE5;
+    --background-color: #605B51;
 }
 
 body{
@@ -55,10 +56,87 @@ body{
                 width: 100%;
                 display: flex;
                 flex-direction: column;
-                background-color: #605B51;
+                background-color: var(--background-color);
                 border-radius: 10px;
                 box-shadow: inset #454040 0 0 10px 5px;
-            
+
+                p {
+                    display: flex;
+                    justify-content: center;
+                }
+
+                #newPetMenu {
+                    grid-area: gameSection;
+                    position: absolute;
+                    height: 100%;
+                    width:100%;
+
+                    justify-self: center;
+
+                    background-color: var(--background-color);
+
+                    border-radius: 10px;
+                    box-shadow: inset #454040 0 0 10px 5px;
+
+                    p {
+                        font-weight: bold;
+                    }
+                                
+                    .petSelect {
+                        display: flex;
+
+                        min-height: 40px;
+                        padding: 10px 0;
+                        
+                        .option {
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+
+                            width: 100px;
+                            height: 30px;
+
+                            margin: 0 10%;
+
+                            border-radius: 10px;
+                            border: #000 1px solid;
+
+                            background-color: #000;
+                            color: var(--background-color);
+
+                            font-weight: bold;
+                        }
+
+                    }
+                    .petImages {
+
+                        .previewCat {
+                            background: url('./assets/pet one sprites verbeterd.png');
+
+                            height: 110px;
+                            width: 110px;
+                            
+                            background-repeat: no-repeat;
+                            background-size: 400%;
+                            background-position: -17px -20px
+                        }
+                        
+                    }
+
+                    .arrowWrapper {
+                        height:10%;
+                        
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        justify-content: space-around;
+
+                        .petArrow {
+                            width: 35px;
+                        }
+                    }
+                }
+
                 #statusBarWrapper{
                     display: flex;
                     flex-direction: row;
@@ -67,9 +145,15 @@ body{
                     height: 20%;
                     border-bottom: black solid 1px;
             
-                    #hungerWrapper, #energyWrapper, #happinessWrapper{
+                    #hungerWrapper, #energyWrapper, #hygeneWrapper{
                         text-align: center;
                         width: 33%;
+                        
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        margin-bottom: 5px;
 
                         p{
                             margin: 6px;
@@ -80,7 +164,7 @@ body{
                         border-top-left-radius: 10px;
                     }
 
-                    #happinessWrapper{
+                    #hygeneWrapper{
                         border-top-right-radius: 10px;
                     }                
 
@@ -97,7 +181,7 @@ body{
                         border-radius: 10px;
                     }
             
-                    #hungerBar, #energyBar, #happinessBar{
+                    #hungerBar, #energyBar, #hygeneBar{
                         height: 10px;
                         overflow: hidden;
                         border-radius: 10px;
@@ -107,7 +191,7 @@ body{
             
                 #homeSection{
                     height: 100%;
-                    background-color: #605B51;
+                    background-color: var(--background-color);
                     border-radius: 0 0 10px 10px;
                     box-shadow: inset #454040 0 -10px 10px 5px;
                     display: flex;
@@ -126,7 +210,7 @@ body{
                             padding: 2px 8px;
                             margin-top: 10px;
 
-                            color: #605B51;
+                            color: var(--background-color);
                             background-color: #000;
                             border-radius: 15px;
                         }
@@ -140,13 +224,13 @@ body{
                             width: 150px;
                             
                             background-repeat: no-repeat;
-                            background-size: 410%;
+                            background-size: 440%;
                         }
                     }
 
                     #logBar {
                         background-color: #000;
-                        color: #605B51;
+                        color: var(--background-color);
 
                         text-align: center;
 
@@ -168,11 +252,11 @@ body{
             ". . selectButton . .";
         
             
-            #previousRoom{grid-area: previousRoom;}
+            #leftButton{grid-area: previousRoom;}
             #selectButton{grid-area: selectButton;}
-            #nextRoom{grid-area: nextRoom;}
+            #rightButton{grid-area: nextRoom;}
             
-            #previousRoom, #selectButton, #nextRoom{
+            #leftButton, #selectButton, #rightButton{
                 filter: none;
                 align-self: center;
                 width: 50px;
@@ -182,8 +266,8 @@ body{
                 box-shadow: 0 0 10px black ;
             }
 
-            #previousRoom, #nextRoom{
-                background-color:#605B51;
+            #leftButton, #rightButton{
+                background-color: var(--background-color);
             }       
 
             i {

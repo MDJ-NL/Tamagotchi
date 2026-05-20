@@ -1,15 +1,16 @@
 /* =============================
     Variables & declarations
 ============================= */
+const petMenu = document.getElementById('newPetMenu');
 // status bar containers
 const hungerContainer = document.getElementById('hungerWrapper');
 const energyContainer = document.getElementById('energyWrapper');
-const happinessContainer = document.getElementById('happinessWrapper');
+const hygeneContainer = document.getElementById('hygeneWrapper');
 
 // status bars
 const hungerBar = document.getElementById('hungerBar');
 const energyBar = document.getElementById('energyBar');
-const happinessBar = document.getElementById('happinessBar')
+const hygeneBar = document.getElementById('hygeneBar')
 /*
 const green = '#a3db3a';
 const yellow = '#d4bd6f';
@@ -20,19 +21,24 @@ const yellow = '#000';
 const red = '#000';
 
 // main window
-const mainBG = document.getElementById('homeSection')
+const mainBG = document.getElementById('homeSection');
 
 // bottom buttons 
-const btnLeft = document.getElementById('previousRoom');
+const btnLeft = document.getElementById('leftButton');
 const btnCenter = document.getElementById('selectButton');
-const btnRight = document.getElementById('nextRoom');
+const btnRight = document.getElementById('rightButton');
+
+// pet select menu
+const leftArrow = document.getElementById('leftArrow');
+const centerArrow = document.getElementById('centerArrow');
+const rightArow = document.getElementById('rightArrow');
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
 
 const hungryBubble = document.getElementById('hungry');
 const tiredBubble = document.getElementById('tired');
-const unhappyBubble = document.getElementById('unhappy');
+const dirtyBubble = document.getElementById('dirty');
 
 //pet div
 const petSprite = document.getElementById('petSprite');
@@ -40,14 +46,17 @@ const petSprite = document.getElementById('petSprite');
 /* selected room
 1 = hunger
 2 = energy
-3 = happiness */
+3 = hygene */
 let currentRoom = 1;
-const feedRoom = '#adccdf';
-const bedRoom = '#addb79';
-const playRoom = '#e6b3cc';
+let roomBG = {
+    kicthen: "url('./assets/x.png')",
+    bed: "url('./assets/y.png')",
+    Shower: "url('./assets/z.png')"
+}
+
 // creatures (unused currently)
 let petSpecies = {
-    cat: "url('./assets/pet one sprites.png')",
+    cat: "url('./assets/pet one sprites verbeterd.png')",
     dog: "",
     bunny: ""
 }
@@ -55,16 +64,17 @@ let petSpecies = {
 let pet = {
     hunger:     80,
     energy:     80,
-    happiness:  80,
+    hygene:     80,
     hungry:     false,
     tired:      false,
-    unhappy:    false,
+    dirty:      false,
     mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
     age:        0,
-    alive:      true,
+    alive:      false,
     idle:       true,
     pose:       1,
-    name:       'placeholderName'
+    species:    '',
+    name:       `unnamed`
 }
 
 let tick = 0;
@@ -73,9 +83,16 @@ let currentDate = new Date();
 let ToD = 'Daytime'
 let clock = '00:00'
 
-/* ==================
+// animation values
+let startX = -36;
+let startY = -10;
+let nextAnimGrid = 217;
+
+let idleInterval = null;
+
+/* ===============
     game State
-================== */
+=============== */
 const saveToLocalStorage = () => {
     let petState = JSON.stringify(pet);
     saveDate = new Date();
@@ -88,7 +105,7 @@ const saveToLocalStorage = () => {
 
 // save gamestate on exit
 window.onbeforeunload = function () {
-   saveToLocalStorage();
+    saveToLocalStorage();
 }
 
 const loadFromLocalstorage = () => {
@@ -145,42 +162,66 @@ const updateTime = () => {
     console.log(`It's ${ToD} - Time:${currentHour}`);
 }
 
+const togglePetSelect = () => {
+    if (!pet.alive) {
+        petMenu.classList.remove('hidden');
+    } else {
+        petMenu.classList.add('hidden');
+    }
+}
+
+const newPet = () => {
+    pet = {
+        hunger:     80,
+        energy:     80,
+        hygene:     80,
+        hungry:     false,
+        tired:      false,
+        dirty:      false,
+        mood:       3,
+        age:        0,
+        alive:      true,
+        anim:       'idle',
+        pose:       1,
+    }
+}
+
 /* ============
     Display
 ============ */
 const idleAnim = () => {
-    setInterval(() => {
-        if (pet.pose === 1)  {
-            pet.pose = 2;
-        } else {
-            pet.pose = 1;
-        }
+    if (idleInterval !== null) return;
+
+    idleInterval = setInterval(() => {
+        if (!pet.alive) return;
+
+        pet.pose = pet.pose === 1 ? 2 : 1;
         updatePet();
     }, 750);
+}
+
+const updateAnimation = () => {
+    let x = startX;
+
+    if (pet.pose === 2) {
+        x -= nextAnimGrid;
+    }
+
+    petSprite.style.backgroundPosition = `${x}px ${startY}px`;
 }
 
 const updatePet = () => {
     if (!pet.alive) return;
     petSprite.style.backgroundImage = petSpecies.cat;
-
-    //animation values
-    let Idle1 = '-10px 0px';
-    let idle2 = '-215px 0px';
-
-    // -205 horizontal
-    // -xx vertical
-    if (pet.idle) {
-        if (pet.pose === 1) {
-            petSprite.style.backgroundPosition = Idle1;
-        } else {
-            petSprite.style.backgroundPosition = idle2;
-        }
+    
+    if (pet.anim === 'idle') {
+        updateAnimation();        
     } else if (pet.hungry) {
         console.log('hunger');
     } else if (pet.energy) {
         console.log('energy');
-    } else if (pet.happiness) {
-        console.log('happiness');
+    } else if (pet.hygene) {
+        console.log('hygene');
     } else {
         console.log('anim state not found');
     }
@@ -193,23 +234,27 @@ const checkSelection = () => { // add selection to status bars as well
     // clear all selections
     hungerContainer.classList.remove('selected');
     energyContainer.classList.remove('selected');
-    happinessContainer.classList.remove('selected');
+    hygeneContainer.classList.remove('selected');
+
+    leftArrow.classList.add('hidden');
+    centerArrow.classList.add('hidden');
+    rightArow.classList.add('hidden');
 
     // mark current selected room
     if (currentRoom === 1) { // hunger
-        //mainBG.style.background = feedRoom;
+        mainBG.style.backgroundImage = roomBG.kicthen;
         hungerContainer.classList.add('selected');
+        leftArrow.classList.remove('hidden');
 
     } else if (currentRoom === 2) { // energy
-        //mainBG.style.background = bedRoom;
+        mainBG.style.backgroundImage = roomBG.bed;
         energyContainer.classList.add('selected');
+        centerArrow.classList.remove('hidden');
 
-    } else if (currentRoom === 3) { // happiness
-        //mainBG.style.background = playRoom;
-        happinessContainer.classList.add('selected');
-
-    } else { // debug test for errors, can be deleted later
-        mainBG.style.background = "#b44343";
+    } else if (currentRoom === 3) { // hygene
+        mainBG.style.backgroundImage = roomBG.shower;
+        hygeneContainer.classList.add('selected');
+        rightArrow.classList.remove('hidden');
     }
 }
 
@@ -227,12 +272,12 @@ function gameLoop() {
     //}
 
     //if (tick % 240 === 0) { // every 4 minutes
-        pet.happiness -= 1;
+        pet.hygene -= 1;
     //}   
 
     updateTime();
     updateUI();
-    updatePet()
+    updatePet();
 }
 
 /* ==============================
@@ -274,21 +319,21 @@ const updateEnergyBar = () => {
     }
 }
 
-const updateHappinessBar = () => {
-    happinessBar.style.width = pet.happiness + '%';
-    pet.unhappy = false;
+const updateHygeneBar = () => {
+    hygeneBar.style.width = pet.hygene + '%';
+    pet.dirty = false;
 
-    if (pet.happiness > 50) {
-        happinessBar.style.background = green;
-    } else if (pet.happiness > 20) {
-        happinessBar.style.backgroundColor = yellow;
+    if (pet.hygene > 50) {
+        hygeneBar.style.background = green;
+    } else if (pet.hygene > 20) {
+        hygeneBar.style.backgroundColor = yellow;
     } else {
-        happinessBar.style.backgroundColor = red;
-        pet.unhappy = true;
+        hygeneBar.style.backgroundColor = red;
+        pet.dirty = true;
     }
 
-    if (pet.happiness <= 0) {
-        pet.happiness = 0;
+    if (pet.hygene <= 0) {
+        pet.hygene = 0;
     }
 }
 
@@ -305,17 +350,17 @@ const updateAlerts = () => {
             tiredBubble.classList.add('hidden');
     }
 
-    if (pet.unhappy) {
-        unhappyBubble.classList.remove('hidden');
+    if (pet.dirty) {
+        dirtyBubble.classList.remove('hidden');
         } else {
-            unhappyBubble.classList.add('hidden');
+            dirtyBubble.classList.add('hidden');
     }
 }
 
 const updateStatusbars = () => {
     updateHungerBar();
     updateEnergyBar();
-    updateHappinessBar();
+    updateHygeneBar();
 }
 
 const updateUI = () => {
@@ -324,9 +369,9 @@ const updateUI = () => {
     checkSelection();
 }
 
-/* =========================
-    button functionality
-========================= */
+/* =======================
+    player interaction
+======================= */
 // multi-functional buttons based on UI
 const pressedLeft = () => {
     if (currentRoom <= 1) {
@@ -349,20 +394,46 @@ const pressedRight = () => {
 const pressedCenter = () => {
     if (currentRoom === 1) {
         pet.hunger = Math.min(100, pet.hunger + 20);
+        if (!pet.alive) {
+            pet.species = 'cat';
+            pet.name = 'cat name'
+
+            pet.anim = 'idle';
+            pet.pose = 1;
+            updatePet();
+        }
 
     } else if (currentRoom === 2) {
         pet.energy = Math.min(100, pet.energy + 20);
+        if (!pet.alive) { 
+            pet.species = 'TBD';
+            console.log('not implemented yet');
+            return;
+        }
 
     } else if (currentRoom === 3) {
-        pet.happiness = Math.min(100, pet.happiness + 20);
+        pet.hygene = Math.min(100, pet.hygene + 20);
+        if (!pet.alive) { 
+            pet.species = 'TBD';
+            console.log('not implemented yet');
+            return;
+        }
     }
-
-    updateStatusbars();
+    
+    if (!pet.alive) {
+        pet.alive = true;      
+        togglePetSelect();
+    } else { 
+        updateStatusbars();
+    }
 }
 
 btnLeft.addEventListener('click', pressedLeft);
 btnCenter.addEventListener('click', pressedCenter);
 btnRight.addEventListener('click', pressedRight);
+
+   
+
 /* ===============
     first load
 =============== */
@@ -373,6 +444,45 @@ const init = () => {
     setInterval(gameLoop, 1000);
     setInterval(saveToLocalStorage, 300000); // 5min periodic save
     idleAnim();
+
+    if (!pet.alive) {
+        togglePetSelect();
+    }
 }
 
 init();
+
+// wiping local storage for debug
+// hold center button for 5 seconds
+isDown=false;
+secondsToHold=5
+
+btnCenter.addEventListener('mousedown', function(event) { 
+    if (!isDown){
+		isDown=true;
+	    setTimeout(function() {
+			if (isDown){
+				localStorage.clear();
+                console.log("localstorage wiped");
+
+                pet = {
+                    hunger:     80,
+                    energy:     80,
+                    hygene:     80,
+                    mood:       3,
+                    age:        0,
+                    alive:      false,
+                    idle:       true,
+                    pose:       1,
+                    name:       'unnamed'
+                }
+
+                saveToLocalStorage();
+                togglePetSelect();
+			}
+		}, (secondsToHold*1000));
+	}
+});
+btnCenter.addEventListener('mouseup', function(event) {
+	isDown=false;  
+})

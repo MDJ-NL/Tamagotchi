@@ -17,6 +17,38 @@
             <img src="assets/breaking-egg-shape.svg">   
             <section id="tamagotchiScreen">
                 <section id="gameSection">
+                    <div id="newPetMenu" class="hidden">
+                        <p>Select new pet:</p>
+                        <div class="petSelect">
+                            <div id="cat" class="option">Cat</div>
+                            <div id="temp1" class="option">TBD</div>
+                            <div id="temp2" class="option">TBD</div>
+                        </div>                        
+                        <div class="petImages">
+                            <div class="previewCat"></div>
+                            <div class="preview2"></div>
+                            <div class="preview3"></div>
+                        </div>
+                        
+                        <div class="arrowWrapper">
+                            <div class="petArrow"  id="leftArrow">
+                                <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="petArrow hidden" id="centerArrow">
+                                <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <div class="petArrow hidden"  id="rightArrow">
+                                <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M18 15L12 9L6 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="statusBarWrapper">
                         <div id="hungerWrapper">
                             <p>Hunger</p>
@@ -30,10 +62,10 @@
                                 <div id="energyBar"></div>
                             </div>
                         </div>
-                        <div id="happinessWrapper">
-                            <p>Happiness</p>
+                        <div id="hygeneWrapper">
+                            <p>Hygene</p>
                             <div class="barWrapper">
-                                <div id="happinessBar"></div>
+                                <div id="hygeneBar"></div>
                             </div>
                         </div>
                     </div>
@@ -41,7 +73,7 @@
                         <div id='bubbleWrapper'>
                             <div id='hungry' class='alertBubble hungry hidden'>Feed me!</div>
                             <div id="tired" class='alertBubble tired hidden'>I need rest!</div>
-                            <div id="unhappy" class='alertBubble unhappy hidden'>Play with me!</div>
+                            <div id="dirty" class='alertBubble dirty hidden'>Clean me!</div>
                         </div>
                         <div id='petWrapper'>
                             <div id="petSprite"></div>
@@ -51,11 +83,11 @@
                 </section>
             </section> 
             <section id="gameButtonsSection">
-                <button id="previousRoom">
+                <button id="leftButton">
                     <i class="fas fa-arrow-circle-left"></i>
                 </button>
                 <button id="selectButton"></button>
-                <button id="nextRoom">
+                <button id="rightButton">
                     <i class="fas fa-arrow-circle-right"></i>
                 </button>
             </section>
