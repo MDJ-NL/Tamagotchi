@@ -84,9 +84,14 @@ let ToD = 'Daytime'
 let clock = '00:00'
 
 // animation values
-let startX = -36;
-let startY = -10;
 let nextAnimGrid = 217;
+// default idle
+let idleX = -36; 
+let idleY = -10;
+
+
+
+
 
 let idleInterval = null;
 
@@ -122,25 +127,31 @@ const loadFromLocalstorage = () => {
 }
 
 const catchUpGameState = () => {
-    let oldSaveDate = new Date(localStorage.getItem('savedDate'));
+    let savedDate = localStorage.getItem('savedDate');
+    if (savedDate === null) return;
 
-    if (oldSaveDate === '') return;
-
-    let currentTime = currentDate.getTime();
+    let oldSaveDate = new Date(savedDate);
+    let currentTime = Date.now();
     let savedTime = oldSaveDate.getTime();
 
     let timeDifference = currentTime - savedTime;
-
-    // convert to seconds and round down
     let catchUpSeconds = Math.floor(timeDifference / 1000);
 
-    for (let i = 0; i < catchUpSeconds; i++) {
-        gameLoop();
-    }
+    if (catchUpSeconds <= 0) return;
 
-    const notification = new Notification('Page status', {
-        body: `It has been ${Math.floor(catchUpSeconds / 60)} minutes since your last visit. Please take good care of ${pet.name}!`
-    });
+    pet.hunger -= catchUpSeconds;
+    pet.energy -= catchUpSeconds;
+    pet.hygene -= catchUpSeconds;
+
+    pet.hunger = Math.max(0, pet.hunger);
+    pet.energy = Math.max(0, pet.energy);
+    pet.hygene = Math.max(0, pet.hygene);
+
+    updateTime();
+    updateUI();
+    updatePet();
+
+    console.log(`Caught up ${catchUpSeconds} seconds.`);
 }
 
 const updateTime = () => {
@@ -201,13 +212,29 @@ const idleAnim = () => {
 }
 
 const updateAnimation = () => {
-    let x = startX;
+    let x;
+    let y;
+    if (pet.anim === 'idle') {
+        x = idleX;
+    } else if (pet.anim === 'unhappy') {
+        x = idleX + nextAnimGrid;
+        y = idleY + nextAnimGrid;
+    } else if (pet.anim === '') {
+
+    } else if (pet.anim === '') {
+
+    } else if (pet.anim === '') {
+
+    } else if (pet.anim === '') {
+
+    }
+    
 
     if (pet.pose === 2) {
         x -= nextAnimGrid;
     }
 
-    petSprite.style.backgroundPosition = `${x}px ${startY}px`;
+    petSprite.style.backgroundPosition = `${x}px ${idleY}px`;
 }
 
 const updatePet = () => {
