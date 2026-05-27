@@ -479,37 +479,61 @@ const init = () => {
 
 init();
 
-// wiping local storage for debug
-// hold center button for 5 seconds
-isDown=false;
-secondsToHold=5
+/* wiping local storage for debug
+hold center button for 5 seconds
+temporarily disable regular click */
 
-btnCenter.addEventListener('mousedown', function(event) { 
-    if (!isDown){
-		isDown=true;
-	    setTimeout(function() {
-			if (isDown){
-				localStorage.clear();
-                console.log("localstorage wiped");
+(function() {
+    let mouseTimer;
+    let longPressFired = false;
+    
+    function mouseDown() { 
+        longPressFired = false;
+        mouseUp();
+        mouseTimer = window.setTimeout(execMouseDown, 2000);
+    }
 
-                pet = {
-                    hunger:     80,
-                    energy:     80,
-                    hygene:     80,
-                    mood:       3,
-                    age:        0,
-                    alive:      false,
-                    idle:       true,
-                    pose:       1,
-                    name:       'unnamed'
-                }
+    function mouseUp() { 
+        if (mouseTimer) window.clearTimeout(mouseTimer);
+    }
 
-                saveToLocalStorage();
-                togglePetSelect();
-			}
-		}, (secondsToHold*1000));
-	}
-});
-btnCenter.addEventListener('mouseup', function(event) {
-	isDown=false;  
-})
+    function blockClickAfterHold(e) {
+        if (longPressFired) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            longPressFired = false;
+            return;
+        }
+
+        pressedCenter();
+    }
+
+    function execMouseDown() { 
+        longPressFired = true;
+
+        localStorage.clear();
+        console.log("localstorage wiped");
+
+        pet = {
+            hunger: 80,
+            energy: 80,
+            hygene: 80,
+            mood: 3,
+            age: 0,
+            alive: false,
+            idle: true,
+            pose: 1,
+            name: 'unnamed'
+        };
+
+        saveToLocalStorage();
+        togglePetSelect();
+    }
+
+    btnCenter.removeEventListener('click', pressedCenter);
+    btnCenter.addEventListener('click', blockClickAfterHold);
+
+    btnCenter.addEventListener("mousedown", mouseDown);
+    document.body.addEventListener("mouseup", mouseUp); 
+}());
+
