@@ -201,7 +201,18 @@ const updateMood = () => {
     if (!pet.alive) return;
     if (animOverride) return;
 
-    if (pet.hunger < 20 || pet.energy < 20 || pet.hygene < 20) {
+    if (pet.hunger == 0 || pet.energy == 0 || pet.hygene == 0) {
+        pet.alive = false;
+        deathFrame = 1;
+        pet.mood = 0;
+
+        clearInterval(animInterval);
+        animInterval = null;
+        
+        petSprite.style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
+        runner(10);
+        
+    } else if (pet.hunger < 20 || pet.energy < 20 || pet.hygene < 20) {
         pet.mood = 1;
         pet.anim = 'unhappy';
     } else if (pet.hunger < 50 || pet.energy < 50 || pet.hygene < 50) {
