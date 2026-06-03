@@ -41,6 +41,7 @@ const tiredBubble = document.getElementById('tired');
 const dirtyBubble = document.getElementById('dirty');
 
 //pet div
+const petWrapper = document.getElementById('petWrapper');
 const petSprite = document.getElementById('petSprite');
 
 /* selected room
@@ -86,14 +87,111 @@ let clock = '00:00'
 
 // animation values
 let animOverride = false; // used to prevent mood changes during action animations
-let nextAnimGrid = 225;
-// default idle
-let startX = -32;
-let startY = -14;
-
 let animInterval = null;
-
 let deathFrame;
+
+/* =========================
+    Sprite logic only
+========================= */
+const liveSpriteConfig = {
+    columns: 2,
+    rows: 6,
+    zoom: 1.12
+};
+
+const deathSpriteConfig = {
+    columns: 2,
+    rows: 3,
+    zoom: 1.12
+};
+
+const animationRows = {
+    idle: 0,
+    happy: 1,
+    unhappy: 2,
+    eating: 3,
+    bathing: 4,
+    sleeping: 5
+};
+
+const deathFrames = [
+    [0, 0], // frame 1
+    [0, 1], // frame 2
+            // repeated twice
+    [0, 0],
+    [0, 1],
+
+    [0, 0],
+    [0, 1],
+
+    [1, 0], // frame 3
+    [1, 1], // frame 4
+    [0, 2], // frame 5
+    [1, 2]  // frame 6
+];
+
+const setPetWrapperSize = () => {
+    petWrapper.style.width = 'clamp(100px, 12vmin, 135px)';
+    petWrapper.style.height = 'clamp(100px, 12vmin, 135px)';
+};
+
+const setSpriteFrame = (column, row, config) => {
+    setPetWrapperSize();
+
+    const frameSize = petWrapper.offsetWidth;
+    const scaledFrame = frameSize * config.zoom;
+    const cropOffset = (scaledFrame - frameSize) / 2;
+
+    petSprite.style.width = '100%';
+    petSprite.style.height = '100%';
+    petSprite.style.backgroundRepeat = 'no-repeat';
+    petSprite.style.backgroundSize = `${config.columns * config.zoom * 100}% ${config.rows * config.zoom * 100}%`;
+
+    const x = -(column * scaledFrame + cropOffset);
+    const y = -(row * scaledFrame + cropOffset);
+
+    petSprite.style.backgroundPosition = `${x}px ${y}px`;
+};
+
+const updateAnimation = () => {
+    if (!pet.alive) return;
+
+    const row = animationRows[pet.anim] ?? animationRows.idle;
+    const column = pet.pose === 2 ? 1 : 0;
+
+    setSpriteFrame(column, row, liveSpriteConfig);
+};
+
+const updatePet = () => {
+    if (!pet.alive) return;
+
+    petSprite.style.backgroundImage = petSpecies.cat;
+    updateAnimation();       
+};
+
+const playDeathAnim = () => {
+    const frame = deathFrames[deathFrame - 1] ?? deathFrames[deathFrames.length - 1];
+
+    const column = frame[0];
+    const row = frame[1];
+
+    setSpriteFrame(column, row, deathSpriteConfig);
+
+    if (deathFrame < deathFrames.length) {
+        deathFrame += 1;
+    }
+};
+
+window.addEventListener('resize', () => {
+    setPetWrapperSize();
+
+    if (pet.alive) {
+        updateAnimation();
+    } else if (deathFrame !== undefined) {
+        playDeathAnim();
+    }
+});
+
 /* ===============
     game State
 =============== */
@@ -301,76 +399,12 @@ const petAnim = () => {
     }, 750);
 }
 
-const updateAnimation = () => {
-    if (!pet.alive) return;
-
-    let x = startX;
-    let y = startY;
-
-    if (pet.anim === 'idle') {
-        y = startY;
-    } else if (pet.anim === 'happy') {
-        y = startY - nextAnimGrid;
-    } else if (pet.anim === 'unhappy') {
-        y = startY - nextAnimGrid * 2;
-    } else if (pet.anim === 'eating') {
-        y = startY - nextAnimGrid * 3;
-    } else if (pet.anim === 'bathing') {
-        y = startY - nextAnimGrid * 4;
-    } else if (pet.anim === 'sleeping') {
-        y = startY - nextAnimGrid * 5;
-    }
-
-    if (pet.pose === 2) {
-        x -= nextAnimGrid;
-    }
-
-    petSprite.style.backgroundPosition = `${x}px ${y}px`;
-}
-
-const updatePet = () => {
-    if (!pet.alive) return;
-    petSprite.style.backgroundImage = petSpecies.cat;
-    updateAnimation();       
-}
-
 function runner(repeats) {
     if (repeats > 0) {
         playDeathAnim();
         setTimeout(() => runner(repeats - 1), 750);
     }
 }
-
-// death animation sequence
-const deathFrames = [
-    [startX, startY],                           // frame 1
-    [startX, startY - nextAnimGrid],            // frame 2
-        // repeat frame 1 & 2 twice
-    [startX, startY],
-    [startX, startY - nextAnimGrid],
-
-    [startX, startY], 
-    [startX, startY - nextAnimGrid],
-
-    [startX - nextAnimGrid, startY],             // frame 3
-    [startX - nextAnimGrid, startY - nextAnimGrid], // frame 4
-    [startX, startY - nextAnimGrid * 2],         // frame 5
-    [startX - nextAnimGrid, startY - nextAnimGrid * 2] // frame 6
-];
-
-// edit the above array to change animation sequence
-const playDeathAnim = () => {
-    const frame = deathFrames[deathFrame - 1] ?? deathFrames[deathFrames.length - 1];
-
-    const x = frame[0];
-    const y = frame[1];
-
-    petSprite.style.backgroundPosition = `${x}px ${y}px`;
-
-    if (deathFrame < deathFrames.length) {
-        deathFrame += 1;
-    }
-};
 
 // test death anim
 addEventListener("keydown", function(event) {
@@ -605,6 +639,7 @@ btnRight.addEventListener('click', pressedRight);
 =============== */
 const init = () => {
     tick = 0;
+    setPetWrapperSize();
     loadFromLocalstorage();
     updateUI();
     setInterval(gameLoop, 1000);
@@ -618,62 +653,3 @@ const init = () => {
 }
 
 init();
-
-/* wiping local storage for debug
-hold center button for 5 seconds
-temporarily disable regular click */
-
-(function() {
-    let mouseTimer;
-    let longPressFired = false;
-    
-    function mouseDown() { 
-        longPressFired = false;
-        mouseUp();
-        mouseTimer = window.setTimeout(execMouseDown, 2000);
-    }
-
-    function mouseUp() { 
-        if (mouseTimer) window.clearTimeout(mouseTimer);
-    }
-
-    function blockClickAfterHold(e) {
-        if (longPressFired) {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            longPressFired = false;
-            return;
-        }
-
-        pressedCenter();
-    }
-
-    function execMouseDown() { 
-        longPressFired = true;
-
-        localStorage.clear();
-        console.log("localstorage wiped");
-
-        pet = {
-            hunger: 80,
-            energy: 80,
-            hygene: 80,
-            mood: 3,
-            age: 0,
-            alive: false,
-            idle: true,
-            pose: 1,
-            name: 'unnamed'
-        };
-
-        saveToLocalStorage();
-        togglePetSelect();
-    }
-
-    btnCenter.removeEventListener('click', pressedCenter);
-    btnCenter.addEventListener('click', blockClickAfterHold);
-
-    btnCenter.addEventListener("mousedown", mouseDown);
-    document.body.addEventListener("mouseup", mouseUp); 
-}());
-
