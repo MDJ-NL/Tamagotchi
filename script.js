@@ -31,7 +31,7 @@ const btnRight = document.getElementById('rightButton');
 // pet select menu
 const leftArrow = document.getElementById('leftArrow');
 const centerArrow = document.getElementById('centerArrow');
-const rightArow = document.getElementById('rightArrow');
+const rightArrow = document.getElementById('rightArrow');
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
@@ -56,7 +56,7 @@ let roomBG = {
 
 // creatures (unused currently)
 let petSpecies = {
-    cat: "url('./assets/pet one sprites verbeterd.png')",
+    cat: "url('./assets/pet one sprites verbeterd (2 breed).png')",
     dog: "",
     bunny: ""
 }
@@ -74,7 +74,8 @@ let pet = {
     idle:       true,
     pose:       1,
     species:    '',
-    name:       `unnamed`
+    name:       `unnamed`,
+    anim:       'idle'
 }
 
 let tick = 0;
@@ -84,17 +85,15 @@ let ToD = 'Daytime'
 let clock = '00:00'
 
 // animation values
-let nextAnimGrid = 217;
+let animOverride = false; // used to prevent mood changes during action animations
+let nextAnimGrid = 225;
 // default idle
-let idleX = -36; 
-let idleY = -10;
+let startX = -32;
+let startY = -14;
 
+let animInterval = null;
 
-
-
-
-let idleInterval = null;
-
+let deathFrame;
 /* ===============
     game State
 =============== */
@@ -150,6 +149,7 @@ const catchUpGameState = () => {
     updateTime();
     updateUI();
     updatePet();
+    updateMood();
 
     console.log(`Caught up ${catchUpSeconds} seconds.`);
 }
@@ -197,13 +197,86 @@ const newPet = () => {
     }
 }
 
+const updateMood = () => {
+    if (!pet.alive) return;
+    if (animOverride) return;
+
+    if (pet.hunger < 20 || pet.energy < 20 || pet.hygene < 20) {
+        pet.mood = 1;
+        pet.anim = 'unhappy';
+    } else if (pet.hunger < 50 || pet.energy < 50 || pet.hygene < 50) {
+        pet.mood = 2;
+        pet.anim = 'idle';
+    } else {
+        pet.mood = 3;
+        pet.anim = 'happy';
+    }
+}
+
+const graduallyIncrease = (statName, updateBarFunction) => {
+    let amountAdded = 0;
+
+    const interval = setInterval(() => {
+        pet[statName] = Math.min(100, pet[statName] + 1);
+        updateBarFunction();
+
+        amountAdded++;
+
+        if (amountAdded >= 10 || pet[statName] >= 100) {
+            clearInterval(interval);
+        }
+    }, 500);
+};
+
+const petFeeding = () => {
+    if (!pet.alive) return;
+    if (animOverride) return;
+
+    pet.anim = 'eating';
+    animOverride = true;
+
+    graduallyIncrease('hunger', updateHungerBar);
+
+    setTimeout(() => {
+        animOverride = false;
+    }, 5000);
+}
+
+const petBathing = () => {
+    if (!pet.alive) return;
+    if (animOverride) return;
+
+    pet.anim = 'bathing';
+    animOverride = true;
+
+    graduallyIncrease('hygene', updateHygeneBar);
+
+    setTimeout(() => {
+        animOverride = false;
+    }, 5000);
+}
+
+const petSleeping = () => {
+    if (!pet.alive) return;
+    if (animOverride) return;
+
+    pet.anim = 'sleeping';
+    animOverride = true;
+
+    graduallyIncrease('energy', updateEnergyBar);
+
+    setTimeout(() => {
+        animOverride = false;
+    }, 5000);
+}
+
 /* ============
     Display
 ============ */
-const idleAnim = () => {
-    if (idleInterval !== null) return;
+const petAnim = () => {
+    if (animInterval !== null) return;
 
-    idleInterval = setInterval(() => {
+    animInterval = setInterval(() => {
         if (!pet.alive) return;
 
         pet.pose = pet.pose === 1 ? 2 : 1;
@@ -212,47 +285,88 @@ const idleAnim = () => {
 }
 
 const updateAnimation = () => {
-    let x;
-    let y;
+    if (!pet.alive) return;
+
+    let x = startX;
+    let y = startY;
+
     if (pet.anim === 'idle') {
-        x = idleX;
+        y = startY;
+    } else if (pet.anim === 'happy') {
+        y = startY - nextAnimGrid;
     } else if (pet.anim === 'unhappy') {
-        x = idleX + nextAnimGrid;
-        y = idleY + nextAnimGrid;
-    } else if (pet.anim === '') {
-
-    } else if (pet.anim === '') {
-
-    } else if (pet.anim === '') {
-
-    } else if (pet.anim === '') {
-
+        y = startY - nextAnimGrid * 2;
+    } else if (pet.anim === 'eating') {
+        y = startY - nextAnimGrid * 3;
+    } else if (pet.anim === 'bathing') {
+        y = startY - nextAnimGrid * 4;
+    } else if (pet.anim === 'sleeping') {
+        y = startY - nextAnimGrid * 5;
     }
-    
 
     if (pet.pose === 2) {
         x -= nextAnimGrid;
     }
 
-    petSprite.style.backgroundPosition = `${x}px ${idleY}px`;
+    petSprite.style.backgroundPosition = `${x}px ${y}px`;
 }
 
 const updatePet = () => {
     if (!pet.alive) return;
     petSprite.style.backgroundImage = petSpecies.cat;
-    
-    if (pet.anim === 'idle') {
-        updateAnimation();        
-    } else if (pet.hungry) {
-        console.log('hunger');
-    } else if (pet.energy) {
-        console.log('energy');
-    } else if (pet.hygene) {
-        console.log('hygene');
-    } else {
-        console.log('anim state not found');
+    updateAnimation();       
+}
+
+function runner(repeats) {
+    if (repeats > 0) {
+        playDeathAnim();
+        setTimeout(() => runner(repeats - 1), 750);
     }
 }
+
+// death animation sequence
+const deathFrames = [
+    [startX, startY],                           // frame 1
+    [startX, startY - nextAnimGrid],            // frame 2
+        // repeat frame 1 & 2 twice
+    [startX, startY],
+    [startX, startY - nextAnimGrid],
+
+    [startX, startY], 
+    [startX, startY - nextAnimGrid],
+
+    [startX - nextAnimGrid, startY],             // frame 3
+    [startX - nextAnimGrid, startY - nextAnimGrid], // frame 4
+    [startX, startY - nextAnimGrid * 2],         // frame 5
+    [startX - nextAnimGrid, startY - nextAnimGrid * 2] // frame 6
+];
+
+//edit the above array to change animation sequence
+const playDeathAnim = () => {
+    const frame = deathFrames[deathFrame - 1] ?? deathFrames[deathFrames.length - 1];
+
+    const x = frame[0];
+    const y = frame[1];
+
+    petSprite.style.backgroundPosition = `${x}px ${y}px`;
+
+    if (deathFrame < deathFrames.length) {
+        deathFrame += 1;
+    }
+};
+
+// test death anim
+addEventListener("keydown", function(event) {
+    if (event.key === "x" || event.key === "X") {
+        pet.alive = false;
+        clearInterval(animInterval);
+        animInterval = null;
+        deathFrame = 1;
+
+        petSprite.style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
+        runner(10);
+    }
+});
 
 /* ======================
     core UI functions
@@ -265,7 +379,7 @@ const checkSelection = () => { // add selection to status bars as well
 
     leftArrow.classList.add('hidden');
     centerArrow.classList.add('hidden');
-    rightArow.classList.add('hidden');
+    rightArrow.classList.add('hidden');
 
     // mark current selected room
     if (currentRoom === 1) { // hunger
@@ -290,21 +404,22 @@ function gameLoop() {
 
     if (!pet.alive) return;
 
-    //if (tick % 300 === 0) { // every 5 minutes
+    if (tick % 300 === 0) { // every 5 minutes
         pet.hunger -= 1;
-    //}
+    }
 
-    //if (tick % 180 === 0) { // every 3 minutes
+    if (tick % 180 === 0) { // every 3 minutes
         pet.energy -= 1;
-    //}
+    }
 
-    //if (tick % 240 === 0) { // every 4 minutes
+    if (tick % 240 === 0) { // every 4 minutes
         pet.hygene -= 1;
-    //}   
+    }   
 
     updateTime();
     updateUI();
     updatePet();
+    updateMood();
 }
 
 /* ==============================
@@ -420,31 +535,32 @@ const pressedRight = () => {
 
 const pressedCenter = () => {
     if (currentRoom === 1) {
-        pet.hunger = Math.min(100, pet.hunger + 20);
         if (!pet.alive) {
             pet.species = 'cat';
-            pet.name = 'cat name'
-
+            pet.name = 'Mametchi'
+            
             pet.anim = 'idle';
             pet.pose = 1;
+            petAnim();
             updatePet();
         }
+        petFeeding();
 
     } else if (currentRoom === 2) {
-        pet.energy = Math.min(100, pet.energy + 20);
         if (!pet.alive) { 
             pet.species = 'TBD';
             console.log('not implemented yet');
             return;
         }
+        petSleeping();
 
     } else if (currentRoom === 3) {
-        pet.hygene = Math.min(100, pet.hygene + 20);
         if (!pet.alive) { 
             pet.species = 'TBD';
             console.log('not implemented yet');
             return;
         }
+        petBathing();
     }
     
     if (!pet.alive) {
@@ -470,7 +586,8 @@ const init = () => {
     updateUI();
     setInterval(gameLoop, 1000);
     setInterval(saveToLocalStorage, 300000); // 5min periodic save
-    idleAnim();
+    petAnim();
+    updateMood();
 
     if (!pet.alive) {
         togglePetSelect();

@@ -111,14 +111,14 @@ body{
                     .petImages {
 
                         .previewCat {
-                            background: url('./assets/pet one sprites verbeterd.png');
+                            background: url("./assets/pet one sprites verbeterd (2 breed).png");
 
                             height: 110px;
                             width: 110px;
                             
                             background-repeat: no-repeat;
-                            background-size: 400%;
-                            background-position: -17px -20px
+                            background-size: 300%;
+                            background-position: -23px -23px
                         }
                         
                     }
@@ -221,10 +221,10 @@ body{
 
                         #petSprite{
                             height: 200px;
-                            width: 150px;
+                            width: 160px;
                             
                             background-repeat: no-repeat;
-                            background-size: 440%;
+                            background-size: 282%;
                         }
                     }
 
