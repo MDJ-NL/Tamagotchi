@@ -231,13 +231,20 @@ body{
                     #petWrapper{
                         margin: 0 auto;
 
-                        #petSprite{
-                            height: min(15vmin, 150px);
-                            width: min(15vmin, 150px);
-                            
+                        width: clamp(90px, 12vmin, 130px);
+                        height: clamp(90px, 12vmin, 130px);
 
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        overflow: hidden;
+
+                        #petSprite{
+                            width: 100%;
+                            height: 100%;
+
+                            background-image: url("./assets/pet one sprites verbeterd (2 breed).png");
                             background-repeat: no-repeat;
-                            background-size: 282%;
                         }
                     }
 
