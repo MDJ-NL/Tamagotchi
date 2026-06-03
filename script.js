@@ -101,8 +101,6 @@ const saveToLocalStorage = () => {
     let petState = JSON.stringify(pet);
     saveDate = new Date();
     
-    //localStorage.clear();
-
     localStorage.setItem('petState', petState);
     localStorage.setItem('savedDate', saveDate);
 }
@@ -117,8 +115,14 @@ const loadFromLocalstorage = () => {
 
     if (petState === null) {
         return;
-    } else {
+    }
+
+    try {
         pet = JSON.parse(petState);
+    } catch (error) {
+        console.error('Bad petState in localStorage:', petState);
+        localStorage.removeItem('petState');
+        return;
     }
 
     catchUpGameState();
@@ -182,7 +186,7 @@ const togglePetSelect = () => {
 }
 
 const newPet = () => {
-    pet = {
+    return {
         hunger:     80,
         energy:     80,
         hygene:     80,
@@ -194,7 +198,9 @@ const newPet = () => {
         alive:      true,
         anim:       'idle',
         pose:       1,
-    }
+        species:    '',
+        name:       'unnamed'
+    };
 }
 
 const updateMood = () => {
@@ -547,6 +553,8 @@ const pressedRight = () => {
 const pressedCenter = () => {
     if (currentRoom === 1) {
         if (!pet.alive) {
+
+            pet = newPet();
             pet.species = 'cat';
             pet.name = 'Mametchi'
             
@@ -554,8 +562,12 @@ const pressedCenter = () => {
             pet.pose = 1;
             petAnim();
             updatePet();
+            togglePetSelect();
+
+            return;
         }
         petFeeding();
+        
 
     } else if (currentRoom === 2) {
         if (!pet.alive) { 
