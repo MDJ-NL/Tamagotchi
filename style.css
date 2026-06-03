@@ -4,8 +4,13 @@
 }
 
 body{
-    background-color: var(--baby-blue-color);
     height: 100vh;
+    width: 100%;
+    display: grid;
+    place-items: center;
+    background-image: url(assets/tamagotchi-background-web.svg);
+    background-repeat: no-repeat;
+    background-size: cover;
 }
 
 .hidden {
@@ -16,34 +21,42 @@ body{
     background-color: #d6ff2185 !important;
 }
 
-#tamagotchiBackground{ 
-    justify-self: center;
-    align-self: center;
-    height: 100%;
+#tamagotchiBackground{
     position: relative;
-    width: 38vw;
-    
+    width: 70vmin;
+    height: 70vmin;
+
+    #tamagotchiHolder{
+        position: absolute;
+        top: -5vmin;
+        width: 70vmin;
+        height: auto;
+    }
+
     #egg-shape-background{
         filter: drop-shadow(0 0 10px #c58c3d);
         position: relative;
         height: auto;
-        width: 100%;
+        left: 7vmin;
+        width: 50vmin;
     }
+
     #breaking-egg-shape-background{
         img{
             filter: drop-shadow(0 0 5px #17294b);
         }
-        position:absolute;
-        top: 20%;
-        width: 30vw;
-        left: 10%;
+        position: absolute;
+        top: 12vmin;
+        width: 40vmin;
+        left: 11.5vmin;
+
         #tamagotchiScreen{
             pointer-events: none;
             position: absolute;
-            top: 0;
+            top: -2vmin;
             display: grid;
-            width: 100%;
-            height: 100%;
+            width: 40vmin;
+            aspect-ratio: 1 / 1.3;
             grid-template-columns: 1.5fr 2fr 4fr 2fr 1.5fr;
             grid-template-rows: 1.5fr 6fr 3fr;
             grid-template-areas: ". . . . ."
@@ -54,6 +67,7 @@ body{
                 grid-area: gameSection;
                 justify-self: center;
                 width: 100%;
+                overflow: hidden;
                 display: flex;
                 flex-direction: column;
                 background-color: var(--background-color);
@@ -69,7 +83,7 @@ body{
                     grid-area: gameSection;
                     position: absolute;
                     height: 100%;
-                    width:100%;
+                    width: 100%;
 
                     justify-self: center;
 
@@ -81,20 +95,20 @@ body{
                     p {
                         font-weight: bold;
                     }
-                                
+
                     .petSelect {
                         display: flex;
 
-                        min-height: 40px;
-                        padding: 10px 0;
-                        
+                        min-height: 3.5vmin;
+                        padding: 0.9vmin 0;
+
                         .option {
                             display: flex;
                             justify-content: center;
                             align-items: center;
 
-                            width: 100px;
-                            height: 30px;
+                            width: 8vmin;
+                            height: 2.5vmin;
 
                             margin: 0 10%;
 
@@ -106,33 +120,31 @@ body{
 
                             font-weight: bold;
                         }
-
                     }
-                    .petImages {
 
+                    .petImages {
                         .previewCat {
                             background: url("./assets/pet one sprites verbeterd (2 breed).png");
 
-                            height: 110px;
-                            width: 110px;
-                            
+                            height: 8vmin;
+                            width: 8vmin;
+
                             background-repeat: no-repeat;
                             background-size: 300%;
-                            background-position: -23px -23px
+                            background-position: -1.6vmin -1.8vmin;
                         }
-                        
                     }
 
                     .arrowWrapper {
-                        height:10%;
-                        
+                        height: 10%;
+
                         display: flex;
                         justify-content: center;
                         align-items: center;
                         justify-content: space-around;
 
                         .petArrow {
-                            width: 35px;
+                            width: 2.5vmin;
                         }
                     }
                 }
@@ -140,23 +152,22 @@ body{
                 #statusBarWrapper{
                     display: flex;
                     flex-direction: row;
-                
+
                     justify-content: space-around;
                     height: 20%;
                     border-bottom: black solid 1px;
-            
+
                     #hungerWrapper, #energyWrapper, #hygeneWrapper{
                         text-align: center;
                         width: 33%;
-                        
+
                         display: flex;
                         flex-direction: column;
                         justify-content: center;
                         align-items: center;
-                        margin-bottom: 5px;
 
                         p{
-                            margin: 6px;
+                            margin: 0.5vmin;
                         }
                     }
 
@@ -166,7 +177,7 @@ body{
 
                     #hygeneWrapper{
                         border-top-right-radius: 10px;
-                    }                
+                    }
 
                     #energyWrapper {
                         border-left: black solid 1px;
@@ -174,21 +185,20 @@ body{
                     }
 
                     .barWrapper {
-                        width: 95px;
+                        width: 80%;
                         border: #000 1px solid;
                         margin: 0 10%;
-                        height: 10px;
+                        height: 0.8vmin;
                         border-radius: 10px;
                     }
-            
+
                     #hungerBar, #energyBar, #hygeneBar{
-                        height: 10px;
+                        height: 0.8vmin;
                         overflow: hidden;
                         border-radius: 10px;
                     }
-                    
                 }
-            
+
                 #homeSection{
                     height: 100%;
                     background-color: var(--background-color);
@@ -204,11 +214,11 @@ body{
                         justify-items: center;
 
                         .alertBubble {
-                            font-size: 13px;
+                            font-size: 1.2vmin;
                             font-weight: bold;
 
-                            padding: 2px 8px;
-                            margin-top: 10px;
+                            padding: 0.2vmin 0.7vmin;
+                            margin-top: 0.9vmin;
 
                             color: var(--background-color);
                             background-color: #000;
@@ -220,9 +230,9 @@ body{
                         margin: 0 auto;
 
                         #petSprite{
-                            height: 200px;
-                            width: 160px;
-                            
+                            height: 15vmin;
+                            width: 15vmin;
+
                             background-repeat: no-repeat;
                             background-size: 282%;
                         }
@@ -236,44 +246,45 @@ body{
 
                         border-radius: 10px;
                         width: 75%;
-                        
-                        margin: 0 auto 5px auto;
+
+                        margin: 0 auto 0.5vmin auto;
                     }
                 }
-            }            
+            }
         }
 
         #gameButtonsSection{
+            position: absolute;
+            top: 40vmin;
             display: grid;
-            column-gap: 4vw;
+            column-gap: 4vmin;
             grid-template-columns: 2fr 1fr 1fr 1fr 2fr;
-            grid-template-rows: 1fr 1fr ;
+            grid-template-rows: 1fr 1fr;
             grid-template-areas: ". previousRoom . nextRoom ."
-            ". . selectButton . .";
-        
-            
+                                 ". . selectButton . .";
+
             #leftButton{grid-area: previousRoom;}
             #selectButton{grid-area: selectButton;}
             #rightButton{grid-area: nextRoom;}
-            
+
             #leftButton, #selectButton, #rightButton{
                 filter: none;
                 align-self: center;
-                width: 50px;
-                height: 50px;
+                width: 5vmin;
+                height: 5vmin;
                 border-radius: 50%;
                 border: rgb(211, 208, 208) solid 1px;
-                box-shadow: 0 0 10px black ;
+                box-shadow: 0 0 10px black;
             }
 
             #leftButton, #rightButton{
                 background-color: var(--background-color);
-            }       
+            }
 
             i {
-                font-size: 50px;
+                font-size: 5vmin;
                 color: #fff;
-                margin: -2px 0px 0 -12px;
+                margin: -0.2vmin 0 0 -1.5vmin;
             }
 
             i:hover {
@@ -282,6 +293,3 @@ body{
         }
     }
 }
-
-
-
