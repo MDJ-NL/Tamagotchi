@@ -8,9 +8,11 @@ body{
     width: 100%;
     display: grid;
     place-items: center;
+    background-color: var(--baby-blue-color);
     background-image: url(assets/tamagotchi-background-web.svg);
     background-repeat: no-repeat;
     background-size: cover;
+    overflow: hidden;
 }
 
 .hidden {
@@ -34,7 +36,7 @@ body{
     }
 
     #egg-shape-background{
-        filter: drop-shadow(0 0 10px #c58c3d);
+        /* filter: drop-shadow(0 0 10px #c58c3d); */
         position: relative;
         height: auto;
         left: 7vmin;
@@ -46,9 +48,9 @@ body{
             filter: drop-shadow(0 0 5px #17294b);
         }
         position: absolute;
-        top: 12vmin;
+        top: 11vmin;
         width: 40vmin;
-        left: 11.5vmin;
+        left: 12vmin;
 
         #tamagotchiScreen{
             pointer-events: none;
@@ -230,8 +232,9 @@ body{
                         margin: 0 auto;
 
                         #petSprite{
-                            height: 15vmin;
-                            width: 15vmin;
+                            height: min(15vmin, 150px);
+                            width: min(15vmin, 150px);
+                            
 
                             background-repeat: no-repeat;
                             background-size: 440%;
@@ -287,7 +290,7 @@ body{
                 margin: -0.2vmin 0 0 -1.5vmin;
             }
 
-            i:hover {
+            i:hover, #selectButton:hover{ {
                 color: #d1d1d1;
             }
         }
