@@ -124,13 +124,13 @@ body{
 
                     .petImages {
                         .previewCat {
-                            background: url('./assets/pet one sprites verbeterd.png');
+                            background: url("./assets/pet one sprites verbeterd (2 breed).png");
 
                             height: 8vmin;
                             width: 8vmin;
 
                             background-repeat: no-repeat;
-                            background-size: 400%;
+                            background-size: 300%;
                             background-position: -1.6vmin -1.8vmin;
                         }
                     }
@@ -234,7 +234,7 @@ body{
                             width: 15vmin;
 
                             background-repeat: no-repeat;
-                            background-size: 440%;
+                            background-size: 282%;
                         }
                     }
 
