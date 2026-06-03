@@ -301,3 +301,9 @@ body{
         }
     }
 }
+
+@media (max-width: 500px) {
+    body{
+        background-image: url(assets/tamagotchi-background-mobile.svg);
+    }
+}
