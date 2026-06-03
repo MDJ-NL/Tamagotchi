@@ -44,8 +44,8 @@ body{
     }
 
     #breaking-egg-shape-background{
-        img{
-            filter: drop-shadow(0 0 5px #17294b);
+        svg{
+            filter: drop-shadow(0 0 5px #393d46);
         }
         position: absolute;
         top: 11vmin;
@@ -290,7 +290,7 @@ body{
                 margin: -0.2vmin 0 0 -1.5vmin;
             }
 
-            i:hover, #selectButton:hover{ {
+            i:hover, #selectButton:hover{
                 color: #d1d1d1;
             }
         }
