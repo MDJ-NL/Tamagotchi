@@ -278,6 +278,7 @@ body{
                 border-radius: 50%;
                 border: rgb(211, 208, 208) solid 1px;
                 box-shadow: 0 0 10px black;
+                color: #fff;
             }
 
             #leftButton, #rightButton{
@@ -290,8 +291,12 @@ body{
                 margin: -0.2vmin 0 0 -1.5vmin;
             }
 
-            i:hover, #selectButton:hover{ {
+            i:hover{ 
                 color: #d1d1d1;
+            }
+
+            #selectButton:hover{
+                background-color: #d1d1d1;
             }
         }
     }
