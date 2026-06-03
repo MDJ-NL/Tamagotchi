@@ -352,7 +352,7 @@ const deathFrames = [
     [startX - nextAnimGrid, startY - nextAnimGrid * 2] // frame 6
 ];
 
-//edit the above array to change animation sequence
+// edit the above array to change animation sequence
 const playDeathAnim = () => {
     const frame = deathFrames[deathFrame - 1] ?? deathFrames[deathFrames.length - 1];
 
