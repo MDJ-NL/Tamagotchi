@@ -96,6 +96,7 @@ let deathFrame;
 /* =========================
     Sprite logic only
 ========================= */
+
 const liveSpriteConfig = {
     columns: 2,
     rows: 6,
@@ -104,7 +105,7 @@ const liveSpriteConfig = {
 
 const deathSpriteConfig = {
     columns: 2,
-    rows: 3,
+    rows: 6,
     zoom: 1.12
 };
 
@@ -134,8 +135,8 @@ const deathFrames = [
 ];
 
 const setPetWrapperSize = () => {
-    petWrapper.style.width = 'clamp(50px, 15vmin, 200px)';
-    petWrapper.style.height = 'clamp(50px, 15vmin, 200px)';
+    petWrapper.style.width = 'clamp(100px, 12vmin, 135px)';
+    petWrapper.style.height = 'clamp(100px, 12vmin, 135px)';
 };
 
 const setSpriteFrame = (column, row, config) => {
@@ -148,7 +149,8 @@ const setSpriteFrame = (column, row, config) => {
     petSprite.style.width = '100%';
     petSprite.style.height = '100%';
     petSprite.style.backgroundRepeat = 'no-repeat';
-    petSprite.style.backgroundSize = `${config.columns * config.zoom * 100}% ${config.rows * config.zoom * 100}%`;
+    petSprite.style.backgroundSize =
+        `${config.columns * config.zoom * 100}% ${config.rows * config.zoom * 100}%`;
 
     const x = -(column * scaledFrame + cropOffset);
     const y = -(row * scaledFrame + cropOffset);
@@ -169,20 +171,38 @@ const updatePet = () => {
     if (!pet.alive) return;
 
     petSprite.style.backgroundImage = petSpecies.cat;
-    updateAnimation();       
+    updateAnimation();
 };
 
-const playDeathAnim = () => {
+const renderDeathFrame = () => {
     const frame = deathFrames[deathFrame - 1] ?? deathFrames[deathFrames.length - 1];
 
     const column = frame[0];
     const row = frame[1];
 
     setSpriteFrame(column, row, deathSpriteConfig);
+};
+
+const playDeathAnim = () => {
+    renderDeathFrame();
 
     if (deathFrame < deathFrames.length) {
         deathFrame += 1;
     }
+};
+
+const startDeathAnimation = () => {
+    if (!pet.alive && deathFrame !== undefined) return;
+
+    pet.alive = false;
+    deathFrame = 1;
+
+    clearInterval(animInterval);
+    animInterval = null;
+
+    petSprite.style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
+
+    runner(deathFrames.length);
 };
 
 window.addEventListener('resize', () => {
@@ -191,7 +211,7 @@ window.addEventListener('resize', () => {
     if (pet.alive) {
         updateAnimation();
     } else if (deathFrame !== undefined) {
-        playDeathAnim();
+        renderDeathFrame();
     }
 });
 
