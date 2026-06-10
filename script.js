@@ -44,8 +44,10 @@ const dirtyBubble = document.getElementById('dirty');
 const petWrapper = document.getElementById('petWrapper');
 const petSprite = document.getElementById('petSprite');
 
-// logs bar
+// logs
 const clockDisplay = document.getElementById('clock');
+const logWindow = document.getElementById('eventLog');
+const logBtn = document.getElementById('logBtn');
 
 /* selected room
 1 = hunger
@@ -201,7 +203,8 @@ const startDeathAnimation = () => {
     animInterval = null;
 
     petSprite.style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
-
+    
+    logEntry(`${pet.name} has died...`);
     runner(deathFrames.length);
 };
 
@@ -260,6 +263,9 @@ const catchUpGameState = () => {
 
     let timeDifference = currentTime - savedTime;
     let catchUpSeconds = Math.floor(timeDifference / 1000);
+    let catchUpMinutes = Math.floor(catchUpSeconds / 60);
+    let catchUpHours = Math.floor(catchUpMinutes / 60);
+    let catchUpTimeString = `${catchUpHours}h ${catchUpMinutes % 60}m ${catchUpSeconds % 60}s`;
 
     if (catchUpSeconds <= 0) return;
 
@@ -276,7 +282,7 @@ const catchUpGameState = () => {
     updatePet();
     updateMood();
 
-    console.log(`Caught up ${catchUpSeconds} seconds.`);
+    logEntry(`Caught up, player has been away for ${catchUpTimeString}`)
 }
 
 const updateTime = () => {
@@ -288,8 +294,8 @@ const updateTime = () => {
     clock = timeOfDay.slice(0, 5);
 
     // Debug number
-    currentHour += 8;
-    currentMinute = 35;
+    //currentHour += 8;
+    //currentMinute = 35;
 
     // time of day
     if (currentHour >= 6 && currentHour <= 12) {
@@ -374,10 +380,10 @@ const graduallyIncrease = (statName, updateBarFunction) => {
 
         amountAdded++;
 
-        if (amountAdded >= 10 || pet[statName] >= 100) {
+        if (amountAdded >= 20 || pet[statName] >= 100) {
             clearInterval(interval);
         }
-    }, 500);
+    }, 250);
 };
 
 const petFeeding = () => {
@@ -449,6 +455,28 @@ addEventListener("keydown", function(event) {
         startDeathAnimation();
     }
 });
+
+const toggleLog = () => {
+    if (logWindow.classList.contains('hidden')) {
+        logWindow.classList.remove('hidden');
+    } else {
+        logWindow.classList.add('hidden');
+    }
+}
+logBtn.addEventListener('click', toggleLog);
+
+function logEntry(entry) {
+    const newDiv = document.createElement('div');
+    newDiv.classList.add('logEntry');
+    newDiv.innerHTML = `<p>${entry}</p> <p class="timestamp">${clock}</p>`;
+    logWindow.appendChild(newDiv);
+
+    if (eventLog.children.length > 10) {
+        eventLog.firstElementChild.remove();
+    }
+
+    localStorage.setItem('eventLog', logWindow.innerHTML);
+}
 
 /* ======================
     core UI functions
@@ -628,7 +656,8 @@ const pressedCenter = () => {
             petAnim();
             updatePet();
             togglePetSelect();
-
+            
+            logEntry(`New pet selected, ${pet.name} (${pet.species})`)
             return;
         }
         petFeeding();
@@ -677,6 +706,7 @@ const init = () => {
     setInterval(saveToLocalStorage, 300000); // 5min periodic save
     petAnim();
     updateMood();
+    eventLog.innerHTML = localStorage.getItem('eventLog') || '';
 
     if (!pet.alive) {
         togglePetSelect();
