@@ -313,4 +313,30 @@ body{
             }
         }
     }
+
+    #logBtn {
+        position: absolute;
+        left: 360px;
+        bottom: 50px;
+    }
+
+    #eventLog {
+        position: absolute;
+        right: -203px;
+        bottom: 87px;
+        
+        background-color: #dbdad7;
+        border-radius: 5px;
+        padding: 10px;
+        border: solid 1px #000;
+
+        .logEntry {
+            border: 1px #000 solid;
+            padding: 0 5px;
+
+            .timestamp {
+                text-align: end;
+            }
+        }
+    }
 }
