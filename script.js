@@ -40,9 +40,12 @@ const hungryBubble = document.getElementById('hungry');
 const tiredBubble = document.getElementById('tired');
 const dirtyBubble = document.getElementById('dirty');
 
-//pet div
+// pet div
 const petWrapper = document.getElementById('petWrapper');
 const petSprite = document.getElementById('petSprite');
+
+// logs bar
+const clockDisplay = document.getElementById('clock');
 
 /* selected room
 1 = hunger
@@ -131,8 +134,8 @@ const deathFrames = [
 ];
 
 const setPetWrapperSize = () => {
-    petWrapper.style.width = 'clamp(100px, 12vmin, 135px)';
-    petWrapper.style.height = 'clamp(100px, 12vmin, 135px)';
+    petWrapper.style.width = 'clamp(50px, 15vmin, 200px)';
+    petWrapper.style.height = 'clamp(50px, 15vmin, 200px)';
 };
 
 const setSpriteFrame = (column, row, config) => {
@@ -272,7 +275,12 @@ const updateTime = () => {
     } else {
         ToD = 'Nighttime';
     }
-    console.log(`It's ${ToD} - Time:${currentHour}`);
+    
+    clockDisplay.innerText = `${clock} ${ToD}`;
+
+    console.log(`It's ${ToD} - Time:${clock}`);
+    
+    
 }
 
 const togglePetSelect = () => {
@@ -416,6 +424,11 @@ addEventListener("keydown", function(event) {
 
         petSprite.style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
         runner(10);
+    }
+
+    if (event.key === "p" || event.key === "P") {
+        console.log('p');
+        document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
     }
 });
 

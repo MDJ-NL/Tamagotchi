@@ -1,5 +1,8 @@
 :root{
-    --baby-blue-color: #BBDCE5;
+    --tod-dawn: #F4B6A6;
+    --tod-day: #BBDCE5;
+    --tod-dusk: #C47A9A;
+    --tod-night: #1B2440;
     --background-color: #605B51;
 }
 
@@ -8,11 +11,13 @@ body{
     width: 100%;
     display: grid;
     place-items: center;
-    background-color: var(--baby-blue-color);
+    background-color: var(--tod-day);
     background-image: url(assets/tamagotchi-background-web.svg);
     background-repeat: no-repeat;
     background-size: cover;
     overflow: hidden;
+
+    transition: background-color 1800s linear;
 }
 
 .hidden {
@@ -256,6 +261,7 @@ body{
 
                         border-radius: 10px;
                         width: 75%;
+                        padding: 0 10px;
 
                         margin: 0 auto 0.5vmin auto;
                     }
