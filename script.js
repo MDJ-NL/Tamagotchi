@@ -283,24 +283,40 @@ const updateTime = () => {
     currentDate = new Date();
     let timeOfDay = currentDate.toTimeString();
 
+    let currentMinute = parseInt(timeOfDay.slice(3, 5));
     let currentHour = parseInt(timeOfDay.slice(0, 2));
     clock = timeOfDay.slice(0, 5);
 
-    // currentHour += 8; // Debug number
+    // Debug number
+    currentHour += 8;
+    currentMinute = 35;
 
-    if (currentHour >= 6 && currentHour <= 18) {
-        ToD = 'Daytime';
-    } else if (currentHour <= 22) {
+    // time of day
+    if (currentHour >= 6 && currentHour <= 12) {
+        ToD = 'Morning';
+    } else if (currentHour > 12 && currentHour <= 18) {
+        ToD = 'Day';
+    } else if (currentHour > 18 && currentHour <= 21) {
         ToD = 'Evening';
     } else {
-        ToD = 'Nighttime';
+        ToD = 'Night';
     }
+
+    // background color cycle
+   if (currentHour == 5 && currentMinute >= 30) {
+    document.body.style.backgroundColor = "var(--" + 'tod-dawn' +")";
+   } else if (currentHour == 6 && currentMinute >= 30) {
+    document.body.style.backgroundColor = "var(--" + 'tod-day' +")";
+   } else if (currentHour == 19 && currentMinute >= 30) {
+    document.body.style.backgroundColor = "var(--" + 'tod-dusk' +")";
+   } else if (currentHour == 20 && currentMinute >= 30) {
+    document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
+   }
     
     clockDisplay.innerText = `${clock} ${ToD}`;
 
-    console.log(`It's ${ToD} - Time:${clock}`);
-    
-    
+    // debug time log
+    console.log(`It's ${ToD} - Time:${clock} - ${currentMinute}`);
 }
 
 const togglePetSelect = () => {
@@ -444,11 +460,6 @@ addEventListener("keydown", function(event) {
 
         petSprite.style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
         runner(10);
-    }
-
-    if (event.key === "p" || event.key === "P") {
-        console.log('p');
-        document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
     }
 });
 
