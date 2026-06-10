@@ -40,9 +40,12 @@ const hungryBubble = document.getElementById('hungry');
 const tiredBubble = document.getElementById('tired');
 const dirtyBubble = document.getElementById('dirty');
 
-//pet div
+// pet div
 const petWrapper = document.getElementById('petWrapper');
 const petSprite = document.getElementById('petSprite');
+
+// logs bar
+const clockDisplay = document.getElementById('clock');
 
 /* selected room
 1 = hunger
@@ -292,7 +295,12 @@ const updateTime = () => {
     } else {
         ToD = 'Nighttime';
     }
-    console.log(`It's ${ToD} - Time:${currentHour}`);
+    
+    clockDisplay.innerText = `${clock} ${ToD}`;
+
+    console.log(`It's ${ToD} - Time:${clock}`);
+    
+    
 }
 
 const togglePetSelect = () => {
@@ -423,6 +431,11 @@ function runner(repeats) {
 addEventListener("keydown", function(event) {
     if (event.key === "x" || event.key === "X") {
         startDeathAnimation();
+    }
+
+    if (event.key === "p" || event.key === "P") {
+        console.log('p');
+        document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
     }
 });
 
