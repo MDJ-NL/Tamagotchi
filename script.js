@@ -340,13 +340,13 @@ const updateTime = () => {
 
     // background color cycle
    if (currentHour == 5 && currentMinute >= 30) {
-    document.body.style.backgroundColor = "var(--" + 'tod-dawn' +")";
+        document.body.style.backgroundColor = "var(--" + 'tod-dawn' +")";
    } else if (currentHour == 6 && currentMinute >= 30) {
-    document.body.style.backgroundColor = "var(--" + 'tod-day' +")";
+        document.body.style.backgroundColor = "var(--" + 'tod-day' +")";
    } else if (currentHour == 19 && currentMinute >= 30) {
-    document.body.style.backgroundColor = "var(--" + 'tod-dusk' +")";
+        document.body.style.backgroundColor = "var(--" + 'tod-dusk' +")";
    } else if (currentHour == 20 && currentMinute >= 30) {
-    document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
+        document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
    }
     
     clockDisplay.innerText = `${clock} ${ToD}`;
