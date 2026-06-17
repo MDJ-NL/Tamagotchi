@@ -4,6 +4,20 @@
     --tod-dusk: #C47A9A;
     --tod-night: #1B2440;
     --background-color: #605B51;
+    /* color selector picks*/
+    --blue: #5FA8FF;
+    --green: #6FD48A;
+    --yellow: #F7D154;
+    --orange: #F7A95A;
+    --purple: #A98CFF;
+    --red: #F07A7A;
+    /* inner shell colors */
+    --blue2: #A9D1FF;
+    --green2: #B7EBC3;
+    --yellow2: #FFE89A;
+    --orange2: #FFD0A3;
+    --purple2: #D6C5FF;
+    --red2: #FFB5B5;
 }
 
 body{
@@ -26,6 +40,19 @@ body{
 
 .selected {
     background-color: #d6ff2185 !important;
+}
+
+.st0 {
+    fill: #fff;
+    opacity: .5;
+}
+
+#st1 {
+    fill: #f8b85b;
+}
+
+#cls-1 {
+    fill: #335ca7;
 }
 
 #tamagotchiBackground{
@@ -313,11 +340,18 @@ body{
             }
         }
     }
-
-    #logBtn {
-        position: absolute;
+    .buttonWrapper {
         left: 360px;
-        bottom: 50px;
+        position: inherit;
+
+        /*
+        #logBtn {
+            
+        }
+    
+        #optionBtn {
+            
+        } */
     }
 
     #eventLog {
@@ -336,6 +370,70 @@ body{
 
             .timestamp {
                 text-align: end;
+            }
+        }
+    }
+
+    #options {
+        position: inherit;
+        right: 32px;
+        bottom: 281px;
+        
+        background-color: #dbdad7;
+        border-radius: 5px;
+        padding: 10px;
+        border: solid 1px #000;
+
+        width: fit-content;
+        height: fit-content;
+
+        .colorList {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+
+            border: 1px #000 solid;
+            padding: 10px 10px;
+
+            .color,
+            .color2 {
+                padding: 10px;
+                border-radius: 15px;
+                border: 1px #dbdad7 solid;          
+            }
+
+            .colorWrapper {
+                display: flex;
+                gap: 5px;
+                
+                .color:hover {
+                    cursor: pointer;
+                }
+                
+                .blue {
+                    background-color: var(--blue);
+                }
+                
+                .green {
+                    background-color: var(--green);
+                }
+                
+                .yellow {
+                    background-color: var(--yellow);
+                }
+                
+                .orange {
+                    background-color: var(--orange);
+                }
+                
+                .purple {
+                    background-color: var(--purple);
+                }
+                
+                .red {
+                    background-color: var(--red);
+                }
+                
             }
         }
     }
