@@ -1,5 +1,8 @@
 :root{
-    --baby-blue-color: #BBDCE5;
+    --tod-dawn: #F4B6A6;
+    --tod-day: #BBDCE5;
+    --tod-dusk: #C47A9A;
+    --tod-night: #1B2440;
     --background-color: #605B51;
 }
 
@@ -8,11 +11,13 @@ body{
     width: 100%;
     display: grid;
     place-items: center;
-    background-color: var(--baby-blue-color);
+    background-color: var(--tod-day);
     background-image: url(assets/tamagotchi-background-web.svg);
     background-repeat: no-repeat;
     background-size: cover;
     overflow: hidden;
+
+    transition: background-color 1800s linear;
 }
 
 .hidden {
@@ -44,8 +49,8 @@ body{
     }
 
     #breaking-egg-shape-background{
-        img{
-            filter: drop-shadow(0 0 5px #17294b);
+        svg{
+            filter: drop-shadow(0 0 5px #393d46);
         }
         position: absolute;
         top: 11vmin;
@@ -231,13 +236,20 @@ body{
                     #petWrapper{
                         margin: 0 auto;
 
-                        #petSprite{
-                            height: min(15vmin, 150px);
-                            width: min(15vmin, 150px);
-                            
+                        width: clamp(90px, 12vmin, 130px);
+                        height: clamp(90px, 12vmin, 130px);
 
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        overflow: hidden;
+
+                        #petSprite{
+                            width: 100%;
+                            height: 100%;
+
+                            background-image: url("./assets/pet one sprites verbeterd (2 breed).png");
                             background-repeat: no-repeat;
-                            background-size: 282%;
                         }
                     }
 
