@@ -49,6 +49,36 @@ const clockDisplay = document.getElementById('clock');
 const logWindow = document.getElementById('eventLog');
 const logBtn = document.getElementById('logBtn');
 
+// options menu
+const menuBtn = document.getElementById('optionBtn');
+const optionsPanel = document.getElementById('options');
+
+const test = () => {
+    console.log('tested');
+}
+
+// egg shellcolor
+const eggshell = document.getElementById('st1');
+
+document.getElementById('blue').addEventListener('click', (event) => frameColor('blue', event));
+document.getElementById('green').addEventListener('click', (event) => frameColor('green', event));
+document.getElementById('yellow').addEventListener('click', (event) => frameColor('yellow', event));
+document.getElementById('orange').addEventListener('click', (event) => frameColor('orange', event));
+document.getElementById('purple').addEventListener('click', (event) => frameColor('purple', event));
+document.getElementById('red').addEventListener('click', (event) => frameColor('red', event));
+
+// inner shell color
+const innerEgg = document.getElementById('cls-1');
+
+document.getElementById('blue2').addEventListener('click', (event) => innerShellColor('blue2', event));
+document.getElementById('green2').addEventListener('click', (event) => innerShellColor('green2', event));
+document.getElementById('yellow2').addEventListener('click', (event) => innerShellColor('yellow2', event));
+document.getElementById('orange2').addEventListener('click', (event) => innerShellColor('orange2', event));
+document.getElementById('purple2').addEventListener('click', (event) => innerShellColor('purple2', event));
+document.getElementById('red2').addEventListener('click', (event) => innerShellColor('red2', event));
+
+document.getElementById('resetColors').addEventListener('click', resetColors);
+
 /* selected room
 1 = hunger
 2 = energy
@@ -456,6 +486,7 @@ addEventListener("keydown", function(event) {
     }
 });
 
+
 const toggleLog = () => {
     if (logWindow.classList.contains('hidden')) {
         logWindow.classList.remove('hidden');
@@ -476,6 +507,49 @@ function logEntry(entry) {
     }
 
     localStorage.setItem('eventLog', logWindow.innerHTML);
+}
+
+// Options menu
+const toggleOptions = () => {
+    if (optionsPanel.classList.contains('hidden')) {
+        optionsPanel.classList.remove('hidden');
+    } else {
+        optionsPanel.classList.add('hidden');
+    }
+}
+
+menuBtn.addEventListener('click', toggleOptions);
+
+// color selector
+function frameColor(selection, event) {
+    eggshell.style.fill = "var(--" + selection +")";
+
+    let colors = document.getElementsByClassName('color');
+    colors = Array.from(colors);
+
+    colors.forEach(element => {
+        element.style.border = "1px #dbdad7 solid";
+    });
+
+    event.target.style.border = "1px #000 solid";
+}
+
+function innerShellColor(selection, event) {
+    innerEgg.style.fill = "var(--" + selection +")";
+
+    let colors = document.getElementsByClassName('color2');
+    colors = Array.from(colors);
+
+    colors.forEach(element => {
+        element.style.border = "1px #dbdad7 solid";
+    });
+
+    event.target.style.border = "1px #000 solid";
+}
+
+function resetColors() {
+    eggshell.style.fill = "#f8b85b";
+    innerEgg.style.fill = "#335ca7";
 }
 
 /* ======================
