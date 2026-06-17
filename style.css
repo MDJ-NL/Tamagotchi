@@ -254,16 +254,29 @@ body{
                     }
 
                     #logBar {
-                        background-color: #000;
-                        color: var(--background-color);
+                        display: flex;
+                        flex-direction: row;
+                        background-color: transparent;
+                        color: black;
 
                         text-align: center;
 
-                        border-radius: 10px;
-                        width: 75%;
-                        padding: 0 10px;
+                        border-top: #000 solid 1px;
+                        width: 100%;
 
                         margin: 0 auto 0.5vmin auto;
+
+                        #logText {
+                            width: 50%;
+                            text-align: left;
+                            margin-left: 1vw;
+                        }
+
+                        #weatherLog {
+                            width: 50%;
+                            text-align: right;
+                            margin-right: 1vw;
+                        }
                     }
                 }
             }
@@ -313,30 +326,81 @@ body{
             }
         }
     }
+}
 
-    #logBtn {
-        position: absolute;
-        left: 360px;
-        bottom: 50px;
+@media (max-width: 500px) {
+    body{
+        background-image: url(assets/tamagotchi-background-mobile.svg);
     }
 
-    #eventLog {
-        position: absolute;
-        right: -203px;
-        bottom: 87px;
-        
-        background-color: #dbdad7;
-        border-radius: 5px;
-        padding: 10px;
-        border: solid 1px #000;
+    #tamagotchiBackground{
+        width: 90vmin;
+        height: 200vmin;  
 
-        .logEntry {
-            border: 1px #000 solid;
-            padding: 0 5px;
 
-            .timestamp {
-                text-align: end;
-            }
+        #tamagotchiHolder{
+            width: 90vmin;
+            height: 250vmin;
+            top: -5vmin;
         }
+
+        #egg-shape-background{
+            top: 50vmin;
+            left: 4vmin;
+            width: 80vmin;
+        }
+
+        #breaking-egg-shape-background{
+            top: 64vmin;
+            left: 13vmin;
+            width: 62vmin;
+
+            #tamagotchiScreen{
+                top: -2vmin;
+                width: 60vmin;
+
+                #gameSection{
+                    p {
+                        margin: 3vmin 0;
+                    }
+                    #homeSection{
+                        
+                    
+                        #bubbleWrapper{
+                            .alertBubble {
+                                font-size: 2.5vmin;
+                            }
+                        }
+                    }
+
+                    #newPetMenu {
+                        .petSelect {
+                            width: 100%;
+                            
+                            .option {
+                               margin: 0 7%;
+                            }    
+    
+                        }
+                    }
+                }
+            }
+
+             #gameButtonsSection{
+                top: 65vmin;
+
+                #leftButton, #selectButton, #rightButton{
+                    width: 8vmin;
+                    height: 8vmin;
+                }
+
+                i {
+                    font-size: 8vmin;
+                    margin: -0.6vmin 0 0 -2.6vmin;
+                }
+             }   
+        }
+
     }
+
 }
