@@ -75,6 +75,8 @@ const restorePanelPosition = (panel, storageKeyX, storageKeyY) => {
     }
 };
 
+const isMobileView = () => window.matchMedia('(max-width: 500px)').matches;
+
 const preparePanelForDrag = (panel) => {
     const rect = panel.getBoundingClientRect();
 
@@ -815,6 +817,8 @@ btnRight.addEventListener('click', pressedRight);
 
 // options panel drag logic
 optionsPanel.addEventListener('mousedown', (event) => {
+    if (isMobileView()) return;
+
     event.preventDefault();
 
     // prevent drag on color buttons
@@ -835,6 +839,8 @@ optionsPanel.addEventListener('mousedown', (event) => {
 
 // event log drag logic
 logWindow.addEventListener('mousedown', (event) => {
+    if (isMobileView()) return;
+
     event.preventDefault();
 
     const rect = preparePanelForDrag(logWindow);
