@@ -347,14 +347,18 @@ body{
     }
 
      #eventLog {
-        position: absolute;
-        right: -203px;
-        bottom: 87px;
+        position: fixed;
+        right: 20px;
+        top: 90px;
         
         background-color: #dbdad7;
         border-radius: 5px;
         padding: 10px;
         border: solid 1px #000;
+        width: fit-content;
+        max-height: 70vh;
+        overflow-y: auto;
+        cursor: move;
 
         .logEntry {
             border: 1px #000 solid;
@@ -378,6 +382,7 @@ body{
 
         width: fit-content;
         height: fit-content;
+        cursor: move;
 
         .colorList {
             display: flex;

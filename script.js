@@ -53,18 +53,42 @@ const logBtn = document.getElementById('logBtn');
 const menuBtn = document.getElementById('optionBtn');
 const optionsPanel = document.getElementById('options');
 
-// draggable options panel
+// draggable panels
 let draggingOptions = false;
+let draggingLog = false;
+
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let logDragOffsetX = 0;
+let logDragOffsetY = 0;
 
-const savedOptionsX = localStorage.getItem('optionsX');
-const savedOptionsY = localStorage.getItem('optionsY');
+const restorePanelPosition = (panel, storageKeyX, storageKeyY) => {
+    const savedX = localStorage.getItem(storageKeyX);
+    const savedY = localStorage.getItem(storageKeyY);
 
-if (savedOptionsX && savedOptionsY) {
-    optionsPanel.style.left = savedOptionsX + 'px';
-    optionsPanel.style.top = savedOptionsY + 'px';
-}
+    if (savedX !== null && savedY !== null) {
+        panel.style.position = 'fixed';
+        panel.style.left = savedX + 'px';
+        panel.style.top = savedY + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+    }
+};
+
+const preparePanelForDrag = (panel) => {
+    const rect = panel.getBoundingClientRect();
+
+    panel.style.position = 'fixed';
+    panel.style.left = rect.left + 'px';
+    panel.style.top = rect.top + 'px';
+    panel.style.right = 'auto';
+    panel.style.bottom = 'auto';
+
+    return rect;
+};
+
+restorePanelPosition(optionsPanel, 'optionsX', 'optionsY');
+restorePanelPosition(logWindow, 'eventLogX', 'eventLogY');
 
 const test = () => {
     console.log('tested');
@@ -520,8 +544,8 @@ function logEntry(entry) {
     newDiv.innerHTML = `<p>${entry}</p> <p class="timestamp">${clock}</p>`;
     logWindow.appendChild(newDiv);
 
-    if (eventLog.children.length > 10) {
-        eventLog.firstElementChild.remove();
+    if (logWindow.children.length > 10) {
+        logWindow.firstElementChild.remove();
     }
 
     localStorage.setItem('eventLog', logWindow.innerHTML);
@@ -552,6 +576,7 @@ function frameColor(selection, event) {
 
     event.target.style.border = "1px #000 solid";
 }
+
 function innerShellColor(selection, event) {
     innerEgg.style.fill = "var(--" + selection +")";
     localStorage.setItem('innerColor', selection);
@@ -790,7 +815,8 @@ btnRight.addEventListener('click', pressedRight);
 
 // options panel drag logic
 optionsPanel.addEventListener('mousedown', (event) => {
-    event.preventDefault()
+    event.preventDefault();
+
     // prevent drag on color buttons
     if (
         event.target.classList.contains('color') ||
@@ -800,37 +826,70 @@ optionsPanel.addEventListener('mousedown', (event) => {
         return;
     }
 
-    draggingOptions = true;
+    const rect = preparePanelForDrag(optionsPanel);
 
-    dragOffsetX = event.clientX - optionsPanel.offsetLeft;
-    dragOffsetY = event.clientY - optionsPanel.offsetTop;
+    draggingOptions = true;
+    dragOffsetX = event.clientX - rect.left;
+    dragOffsetY = event.clientY - rect.top;
+});
+
+// event log drag logic
+logWindow.addEventListener('mousedown', (event) => {
+    event.preventDefault();
+
+    const rect = preparePanelForDrag(logWindow);
+
+    draggingLog = true;
+    logDragOffsetX = event.clientX - rect.left;
+    logDragOffsetY = event.clientY - rect.top;
 });
 
 document.addEventListener('mousemove', (event) => {
-    if (!draggingOptions) return;
+    if (draggingOptions) {
+        optionsPanel.style.left =
+            (event.clientX - dragOffsetX) + 'px';
 
-    optionsPanel.style.left =
-        (event.clientX - dragOffsetX) + 'px';
+        optionsPanel.style.top =
+            (event.clientY - dragOffsetY) + 'px';
+    }
 
-    optionsPanel.style.top =
-        (event.clientY - dragOffsetY) + 'px';
+    if (draggingLog) {
+        logWindow.style.left =
+            (event.clientX - logDragOffsetX) + 'px';
+
+        logWindow.style.top =
+            (event.clientY - logDragOffsetY) + 'px';
+    }
 });
 
 document.addEventListener('mouseup', () => {
+    if (draggingOptions) {
+        draggingOptions = false;
 
-    if (!draggingOptions) return;
+        localStorage.setItem(
+            'optionsX',
+            optionsPanel.offsetLeft
+        );
 
-    draggingOptions = false;
+        localStorage.setItem(
+            'optionsY',
+            optionsPanel.offsetTop
+        );
+    }
 
-    localStorage.setItem(
-        'optionsX',
-        optionsPanel.offsetLeft
-    );
+    if (draggingLog) {
+        draggingLog = false;
 
-    localStorage.setItem(
-        'optionsY',
-        optionsPanel.offsetTop
-    );
+        localStorage.setItem(
+            'eventLogX',
+            logWindow.offsetLeft
+        );
+
+        localStorage.setItem(
+            'eventLogY',
+            logWindow.offsetTop
+        );
+    }
 });
 
 /* ===============
@@ -845,7 +904,7 @@ const init = () => {
     setInterval(saveToLocalStorage, 300000); // 5min periodic save
     petAnim();
     updateMood();
-    eventLog.innerHTML = localStorage.getItem('eventLog') || '';
+    logWindow.innerHTML = localStorage.getItem('eventLog') || '';
 
     if (!pet.alive) {
         togglePetSelect();
