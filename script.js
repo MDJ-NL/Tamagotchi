@@ -53,6 +53,19 @@ const logBtn = document.getElementById('logBtn');
 const menuBtn = document.getElementById('optionBtn');
 const optionsPanel = document.getElementById('options');
 
+// draggable options panel
+let draggingOptions = false;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+const savedOptionsX = localStorage.getItem('optionsX');
+const savedOptionsY = localStorage.getItem('optionsY');
+
+if (savedOptionsX && savedOptionsY) {
+    optionsPanel.style.left = savedOptionsX + 'px';
+    optionsPanel.style.top = savedOptionsY + 'px';
+}
+
 const test = () => {
     console.log('tested');
 }
@@ -766,7 +779,50 @@ btnLeft.addEventListener('click', pressedLeft);
 btnCenter.addEventListener('click', pressedCenter);
 btnRight.addEventListener('click', pressedRight);
 
-   
+// options panel drag logic
+optionsPanel.addEventListener('mousedown', (event) => {
+    event.preventDefault()
+    // prevent drag on color buttons
+    if (
+        event.target.classList.contains('color') ||
+        event.target.classList.contains('color2') ||
+        event.target.id === 'resetColors'
+    ) {
+        return;
+    }
+
+    draggingOptions = true;
+
+    dragOffsetX = event.clientX - optionsPanel.offsetLeft;
+    dragOffsetY = event.clientY - optionsPanel.offsetTop;
+});
+
+document.addEventListener('mousemove', (event) => {
+    if (!draggingOptions) return;
+
+    optionsPanel.style.left =
+        (event.clientX - dragOffsetX) + 'px';
+
+    optionsPanel.style.top =
+        (event.clientY - dragOffsetY) + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+
+    if (!draggingOptions) return;
+
+    draggingOptions = false;
+
+    localStorage.setItem(
+        'optionsX',
+        optionsPanel.offsetLeft
+    );
+
+    localStorage.setItem(
+        'optionsY',
+        optionsPanel.offsetTop
+    );
+});
 
 /* ===============
     first load
