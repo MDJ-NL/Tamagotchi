@@ -8,6 +8,7 @@ const energyContainer = document.getElementById('energyWrapper');
 const hygeneContainer = document.getElementById('hygeneWrapper');
 
 // status bars
+const generalBar = document.getElementsByClassName('petStatusBar')[0];
 const hungerBar = document.getElementById('hungerBar');
 const energyBar = document.getElementById('energyBar');
 const hygeneBar = document.getElementById('hygeneBar')
@@ -20,13 +21,23 @@ const green = '#000';
 const yellow = '#000';
 const red = '#000';
 
+selectedMenu = 1; // 1 = main, 2 = care, 3 = options
+
 // main window
 const mainBG = document.getElementById('homeSection');
 
-// bottom buttons 
-const btnLeft = document.getElementById('leftButton');
-const btnCenter = document.getElementById('selectButton');
-const btnRight = document.getElementById('rightButton');
+/* ============
+    Buttons
+============ */
+// main menu
+const btnLeftMain = document.getElementById('MainleftButton');
+const btnCenterMain = document.getElementById('MainselectButton');
+const btnRightMain = document.getElementById('MainrightButton');
+
+// care menu
+const btnLeftCare = document.getElementById('CareleftButton');
+const btnCenterCare = document.getElementById('CareselectButton');
+const btnRightCare = document.getElementById('CarerightButton');
 
 // pet select menu
 const leftArrow = document.getElementById('leftArrow');
@@ -41,8 +52,8 @@ const tiredBubble = document.getElementById('tired');
 const dirtyBubble = document.getElementById('dirty');
 
 // pet div
-const petWrapper = document.getElementById('petWrapper');
-const petSprite = document.getElementById('petSprite');
+const petWrapper = document.getElementsByClassName('petWrapper');
+const petSprite = document.getElementsByClassName('petSprite');
 
 // logs
 const clockDisplay = document.getElementById('clock');
@@ -121,6 +132,7 @@ document.getElementById('resetColors').addEventListener('click', resetColors);
 2 = energy
 3 = hygene */
 let currentRoom = 1;
+let selectedPet = 1;
 let roomBG = {
     kicthen: "url('./assets/x.png')",
     bed: "url('./assets/y.png')",
@@ -204,27 +216,36 @@ const deathFrames = [
 ];
 
 const setPetWrapperSize = () => {
-    petWrapper.style.width = 'clamp(100px, 12vmin, 135px)';
-    petWrapper.style.height = 'clamp(100px, 12vmin, 135px)';
+    for (let i = 0; i < petWrapper.length; i++) {
+        const wrapper = petWrapper[i];
+        wrapper.style.width = 'clamp(100px, 12vmin, 135px)';
+        wrapper.style.height = 'clamp(100px, 12vmin, 135px)';
+    }
 };
 
 const setSpriteFrame = (column, row, config) => {
     setPetWrapperSize();
 
-    const frameSize = petWrapper.offsetWidth;
-    const scaledFrame = frameSize * config.zoom;
-    const cropOffset = (scaledFrame - frameSize) / 2;
+    for (let i = 0; i < petSprite.length; i++) {
+        const sprite = petSprite[i];
+        const wrapper = petWrapper[i] || sprite.parentElement;
 
-    petSprite.style.width = '100%';
-    petSprite.style.height = '100%';
-    petSprite.style.backgroundRepeat = 'no-repeat';
-    petSprite.style.backgroundSize =
-        `${config.columns * config.zoom * 100}% ${config.rows * config.zoom * 100}%`;
+        const frameSize = wrapper.offsetWidth;
+        const scaledFrame = frameSize * config.zoom;
+        const cropOffset = (scaledFrame - frameSize) / 2;
 
-    const x = -(column * scaledFrame + cropOffset);
-    const y = -(row * scaledFrame + cropOffset);
+        sprite.style.width = '100%';
+        sprite.style.height = '100%';
+        sprite.style.backgroundRepeat = 'no-repeat';
 
-    petSprite.style.backgroundPosition = `${x}px ${y}px`;
+        sprite.style.backgroundSize =
+            `${config.columns * config.zoom * 100}% ${config.rows * config.zoom * 100}%`;
+
+        const x = -(column * scaledFrame + cropOffset);
+        const y = -(row * scaledFrame + cropOffset);
+
+        sprite.style.backgroundPosition = `${x}px ${y}px`;
+    }
 };
 
 const updateAnimation = () => {
@@ -238,8 +259,9 @@ const updateAnimation = () => {
 
 const updatePet = () => {
     if (!pet.alive) return;
-
-    petSprite.style.backgroundImage = petSpecies.cat;
+    for (let i = 0; i < petSprite.length; i++) {
+        petSprite[i].style.backgroundImage = petSpecies[pet.species];
+    }
     updateAnimation();
 };
 
@@ -269,8 +291,10 @@ const startDeathAnimation = () => {
     clearInterval(animInterval);
     animInterval = null;
 
-    petSprite.style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
-    
+    for (let i = 0; i < petSprite.length; i++) {
+        petSprite[i].style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
+    }
+        
     logEntry(`${pet.name} has died...`);
     runner(deathFrames.length);
 };
@@ -280,6 +304,11 @@ window.addEventListener('resize', () => {
 
     if (pet.alive) {
         updateAnimation();
+
+        setTimeout(() => {
+            togglePetSelect();
+        }, 8000);
+        
     } else if (deathFrame !== undefined) {
         renderDeathFrame();
     }
@@ -630,6 +659,24 @@ const checkSelection = () => { // add selection to status bars as well
     }
 }
 
+// new pet select
+const newPetMenu = () => {
+    leftArrow.classList.add('hidden');
+    centerArrow.classList.add('hidden');
+    rightArrow.classList.add('hidden');
+    
+    // mark current selected room
+    if (selectedPet === 1) { 
+        leftArrow.classList.remove('hidden');
+
+    } else if (selectedPet === 2) { 
+        centerArrow.classList.remove('hidden');
+
+    } else if (selectedPet === 3) { 
+        rightArrow.classList.remove('hidden');
+    }
+}
+
 function gameLoop() {
     tick++;
 
@@ -656,12 +703,25 @@ function gameLoop() {
 /* ==============================
     status bars functionality
 ============================== */
+const updateGeneralBar = () => {
+    const average = (pet.hunger + pet.energy + pet.hygene) / 3;
+    generalBar.style.width = average + '%';
+
+    if (average > 50) {
+        generalBar.style.backgroundColor = green;
+    } else if (average > 20) {
+        generalBar.style.backgroundColor = yellow;
+    } else {
+        generalBar.style.backgroundColor = red;
+    }
+}
+
 const updateHungerBar = () => {
     hungerBar.style.width = pet.hunger + '%';
     pet.hungry = false;
 
     if (pet.hunger > 50) {
-        hungerBar.style.background = green;
+        hungerBar.style.backgroundColor = green;
     } else if (pet.hunger > 20) {
         hungerBar.style.backgroundColor = yellow;
     } else {
@@ -679,7 +739,7 @@ const updateEnergyBar = () => {
     pet.tired = false;
 
     if (pet.energy > 50) {
-        energyBar.style.background = green;
+        energyBar.style.backgroundColor = green;
     } else if (pet.energy > 20) {
         energyBar.style.backgroundColor = yellow;
     } else {
@@ -697,7 +757,7 @@ const updateHygeneBar = () => {
     pet.dirty = false;
 
     if (pet.hygene > 50) {
-        hygeneBar.style.background = green;
+        hygeneBar.style.backgroundColor = green;
     } else if (pet.hygene > 20) {
         hygeneBar.style.backgroundColor = yellow;
     } else {
@@ -734,6 +794,7 @@ const updateStatusbars = () => {
     updateHungerBar();
     updateEnergyBar();
     updateHygeneBar();
+    updateGeneralBar();
 }
 
 const updateUI = () => {
@@ -746,7 +807,59 @@ const updateUI = () => {
     player interaction
 ======================= */
 // multi-functional buttons based on UI
-const pressedLeft = () => {
+// Main window buttons
+const pressedLeftMain = () => {
+    if (!pet.alive) {
+        if (selectedPet === 1) {
+            selectedPet = 3;
+        } else {
+            selectedPet -= 1;
+        }
+        newPetMenu();
+        return;
+    }
+}
+
+const pressedRightMain = () => {
+    if (!pet.alive) {
+        if (selectedPet === 3) {
+            selectedPet = 1;
+        } else {
+            selectedPet += 1;
+        }
+        newPetMenu();
+        return;
+    }
+}
+
+const pressedCenterMain = () => {
+    if (!pet.alive) {
+        pet = newPet();
+        pet.species = 'cat';
+        pet.name = 'Mametchi'
+        
+        pet.anim = 'idle';
+        pet.pose = 1;
+        petAnim();
+        updatePet();
+        togglePetSelect();
+        
+        logEntry(`New pet selected, ${pet.name} (${pet.species})`)
+        return;
+    }
+
+    if (selectedMenu === 1) {
+        console.log('main menu');
+    } else if (selectedMenu === 2) {
+        console.log('care menu');
+    } else if (selectedMenu === 3) {
+        console.log('options menu');
+    }
+}
+
+
+// Care window buttons
+const pressedLeftCare = () => {
     if (currentRoom <= 1) {
         currentRoom = 3
     } else {
@@ -755,7 +868,7 @@ const pressedLeft = () => {
     checkSelection();
 }
 
-const pressedRight = () => {
+const pressedRightCare = () => {
     if (currentRoom >= 3) {
         currentRoom = 1
     } else {
@@ -764,25 +877,9 @@ const pressedRight = () => {
     checkSelection();
 }
 
-const pressedCenter = () => {
+const pressedCenterCare = () => {
     if (currentRoom === 1) {
-        if (!pet.alive) {
-
-            pet = newPet();
-            pet.species = 'cat';
-            pet.name = 'Mametchi'
-            
-            pet.anim = 'idle';
-            pet.pose = 1;
-            petAnim();
-            updatePet();
-            togglePetSelect();
-            
-            logEntry(`New pet selected, ${pet.name} (${pet.species})`)
-            return;
-        }
-        petFeeding();
-        
+        petFeeding();        
 
     } else if (currentRoom === 2) {
         if (!pet.alive) { 
@@ -809,9 +906,13 @@ const pressedCenter = () => {
     }
 }
 
-btnLeft.addEventListener('click', pressedLeft);
-btnCenter.addEventListener('click', pressedCenter);
-btnRight.addEventListener('click', pressedRight);
+btnLeftMain.addEventListener('click', pressedLeftMain);
+btnCenterMain.addEventListener('click', pressedCenterMain);
+btnRightMain.addEventListener('click', pressedRightMain);
+
+btnLeftCare.addEventListener('click', pressedLeftCare);
+btnCenterCare.addEventListener('click', pressedCenterCare);
+btnRightCare.addEventListener('click', pressedRightCare);
 
 // options panel drag logic
 optionsPanel.addEventListener('mousedown', (event) => {

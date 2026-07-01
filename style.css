@@ -35,7 +35,11 @@ body{
 }
 
 .hidden {
-    visibility: hidden;
+    visibility: hidden !important;
+}
+
+.noDisplay {
+    display: none !important;
 }
 
 .selected {
@@ -97,7 +101,8 @@ body{
                                 ". gameSection gameSection gameSection ."
                                 ". . . . .";
 
-            #gameSection{
+            #gameSection,
+            #MainMenu{
                 grid-area: gameSection;
                 justify-self: center;
                 width: 100%;
@@ -108,9 +113,91 @@ body{
                 border-radius: 10px;
                 box-shadow: inset #454040 0 0 10px 5px;
 
+                .mainMenuWrapper{
+                    display: flex;
+                    flex-direction: row;
+
+                    justify-content: space-around;
+                    height: 20%;
+                    border-bottom: black solid 1px;
+
+                    .petStatusWrapper {
+                        width: 80%;
+                        border: #000 1px solid;
+                        margin: 9% 10%;
+                        height: 0.8vmin;
+                        border-radius: 10px;
+
+                        .petStatusBar {
+                            background-color: #000;
+                            color: var(--background-color);
+                            
+                            text-align: center;
+                            
+                            border-radius: 10px;
+                            width: 75%;
+                            padding: 0 10px;
+
+                            height: 0.8vmin;
+                            overflow: hidden;
+                        }
+                    }       
+                }
+                
+
                 p {
                     display: flex;
                     justify-content: center;
+                }
+
+                #statusBarWrapper{
+                    display: flex;
+                    flex-direction: row;
+
+                    justify-content: space-around;
+                    height: 20%;
+                    border-bottom: black solid 1px;
+
+                    #hungerWrapper, #energyWrapper, #hygeneWrapper{
+                        text-align: center;
+                        width: 33%;
+
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+
+                        p{
+                            margin: 0.5vmin;
+                        }
+                    }
+
+                    #hungerWrapper{
+                        border-top-left-radius: 10px;
+                    }
+
+                    #hygeneWrapper{
+                        border-top-right-radius: 10px;
+                    }
+
+                    #energyWrapper {
+                        border-left: black solid 1px;
+                        border-right: black solid 1px;
+                    }
+
+                    .barWrapper {
+                        width: 80%;
+                        border: #000 1px solid;
+                        margin: 0 10%;
+                        height: 0.8vmin;
+                        border-radius: 10px;
+                    }
+
+                    #hungerBar, #energyBar, #hygeneBar{
+                        height: 0.8vmin;
+                        overflow: hidden;
+                        border-radius: 10px;
+                    }
                 }
 
                 #newPetMenu {
@@ -183,56 +270,6 @@ body{
                     }
                 }
 
-                #statusBarWrapper{
-                    display: flex;
-                    flex-direction: row;
-
-                    justify-content: space-around;
-                    height: 20%;
-                    border-bottom: black solid 1px;
-
-                    #hungerWrapper, #energyWrapper, #hygeneWrapper{
-                        text-align: center;
-                        width: 33%;
-
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                        align-items: center;
-
-                        p{
-                            margin: 0.5vmin;
-                        }
-                    }
-
-                    #hungerWrapper{
-                        border-top-left-radius: 10px;
-                    }
-
-                    #hygeneWrapper{
-                        border-top-right-radius: 10px;
-                    }
-
-                    #energyWrapper {
-                        border-left: black solid 1px;
-                        border-right: black solid 1px;
-                    }
-
-                    .barWrapper {
-                        width: 80%;
-                        border: #000 1px solid;
-                        margin: 0 10%;
-                        height: 0.8vmin;
-                        border-radius: 10px;
-                    }
-
-                    #hungerBar, #energyBar, #hygeneBar{
-                        height: 0.8vmin;
-                        overflow: hidden;
-                        border-radius: 10px;
-                    }
-                }
-
                 #homeSection{
                     height: 100%;
                     background-color: var(--background-color);
@@ -260,7 +297,7 @@ body{
                         }
                     }
 
-                    #petWrapper{
+                    .petWrapper{
                         margin: 0 auto;
 
                         width: clamp(90px, 12vmin, 130px);
@@ -296,7 +333,8 @@ body{
             }
         }
 
-        #gameButtonsSection{
+        #CaregameButtonsSection,
+        #MaingameButtonsSection{
             position: absolute;
             top: 40vmin;
             display: grid;
@@ -306,11 +344,21 @@ body{
             grid-template-areas: ". previousRoom . nextRoom ."
                                  ". . selectButton . .";
 
-            #leftButton{grid-area: previousRoom;}
-            #selectButton{grid-area: selectButton;}
-            #rightButton{grid-area: nextRoom;}
+            #CareleftButton,
+            #MainleftButton{grid-area: previousRoom;}
 
-            #leftButton, #selectButton, #rightButton{
+            #CareselectButton,
+            #MainselectButton{grid-area: selectButton;}
+
+            #CarerightButton,
+            #MainrightButton{grid-area: nextRoom;}
+
+            #CareleftButton,
+            #CareselectButton,
+            #CarerightButton,
+            #MainleftButton,
+            #MainselectButton,
+            #MainrightButton {
                 filter: none;
                 align-self: center;
                 width: 5vmin;
@@ -321,7 +369,10 @@ body{
                 color: #fff;
             }
 
-            #leftButton, #rightButton{
+            #CareleftButton,
+            #CarerightButton,
+            #MainleftButton,
+            #MainrightButton{
                 background-color: var(--background-color);
             }
 
@@ -335,7 +386,8 @@ body{
                 color: #d1d1d1;
             }
 
-            #selectButton:hover{
+            #CareselectButton:hover,
+            #MainselectButton:hover{
                 background-color: #d1d1d1;
             }
         }
@@ -468,10 +520,29 @@ body{
                     top: -2vmin;
                     width: 60vmin;
                     
+                    #MainMenu{
+
+                        .mainMenuWrapper{
+                            display: flex;
+                        }
+
+                        #newPetMenu {
+                            .petSelect {
+                                width: 100%;
+                                
+                                .option {
+                                    margin: 0 7%;
+                                }                                
+                            }
+                        }
+                    }
+
                     #gameSection{
                         p {
                             margin: 3vmin 0;
                         }
+                        
+
                         #homeSection{
                             
                             
@@ -481,24 +552,19 @@ body{
                                 }
                             }
                         }
-                        
-                        #newPetMenu {
-                            .petSelect {
-                                width: 100%;
-                                
-                                .option {
-                                    margin: 0 7%;
-                                }    
-                                
-                            }
-                        }
                     }
                 }
             
-                #gameButtonsSection{
+                #CaregameButtonsSection,
+                #MaingameButtonsSection{
                     top: 65vmin;
                 
-                    #leftButton, #selectButton, #rightButton{
+                    #CareleftButton,
+                    #CareselectButton,
+                    #CarerightButton,
+                    #MainleftButton,
+                    #MainselectButton,
+                    #MainrightButton{
                         width: 8vmin;
                         height: 8vmin;
                     }
