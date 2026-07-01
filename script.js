@@ -279,6 +279,11 @@ window.onbeforeunload = function () {
 
 const loadFromLocalstorage = () => {
     let petState = localStorage.getItem('petState');
+    let innerColor = localStorage.getItem('innerColor');
+    let frameColor = localStorage.getItem('frameColor');
+
+    eggshell.style.fill = "var(--" + frameColor +")";
+    innerEgg.style.fill = "var(--" + innerColor +")";
 
     if (petState === null) {
         return;
@@ -536,6 +541,7 @@ menuBtn.addEventListener('click', toggleOptions);
 // color selector
 function frameColor(selection, event) {
     eggshell.style.fill = "var(--" + selection +")";
+    localStorage.setItem('frameColor', selection);
 
     let colors = document.getElementsByClassName('color');
     colors = Array.from(colors);
@@ -546,9 +552,9 @@ function frameColor(selection, event) {
 
     event.target.style.border = "1px #000 solid";
 }
-
 function innerShellColor(selection, event) {
     innerEgg.style.fill = "var(--" + selection +")";
+    localStorage.setItem('innerColor', selection);
 
     let colors = document.getElementsByClassName('color2');
     colors = Array.from(colors);
@@ -563,6 +569,9 @@ function innerShellColor(selection, event) {
 function resetColors() {
     eggshell.style.fill = "#f8b85b";
     innerEgg.style.fill = "#335ca7";
+
+    localStorage.setItem('frameColor', "#f8b85b");
+    localStorage.setItem('innerColor', "#335ca7");
 }
 
 /* ======================
