@@ -367,9 +367,9 @@ body{
     }
 
     #options {
-        position: inherit;
-        right: 32px;
-        bottom: 281px;
+        position: fixed;
+        left: 20px;
+        top: 20px;
         
         background-color: #dbdad7;
         border-radius: 5px;
