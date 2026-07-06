@@ -2,47 +2,69 @@
     Variables & declarations
 ============================= */
 const petMenu = document.getElementById('newPetMenu');
+const screenLabel = document.getElementById('screenLabel');
+const buttonMount = document.getElementById('MaingameButtonsSection');
+const petNameDisplay = document.getElementById('petNameDisplay');
+
+const screenElements = {
+    home: document.getElementById('MainMenu'),
+    care: document.getElementById('gameSection'),
+    games: document.getElementById('gamesMenu'),
+    game1: document.getElementById('game1Screen'),
+    game2: document.getElementById('game2Screen'),
+    game3: document.getElementById('game3Screen')
+};
+
+const screenNames = {
+    home: 'Home',
+    care: 'Care',
+    games: 'Mini-games',
+    game1: 'Game 1',
+    game2: 'Game 2',
+    game3: 'Game 3'
+};
+
+// Top-level menu order: Care <- Home -> Mini-games
+const menuScreens = ['care', 'home', 'games'];
+let selectedMenuIndex = 1;
+let activeScreen = 'home';
+
 // status bar containers
 const hungerContainer = document.getElementById('hungerWrapper');
 const energyContainer = document.getElementById('energyWrapper');
 const hygeneContainer = document.getElementById('hygeneWrapper');
 
 // status bars
-const generalBar = document.getElementsByClassName('petStatusBar')[0];
 const hungerBar = document.getElementById('hungerBar');
 const energyBar = document.getElementById('energyBar');
-const hygeneBar = document.getElementById('hygeneBar')
-/*
-const green = '#a3db3a';
-const yellow = '#d4bd6f';
-const red = '#fa6f6a';
-*/
+const hygeneBar = document.getElementById('hygeneBar');
+
+const generalMoodBars = document.querySelectorAll('.generalMoodBar');
+const generalMoodValues = document.querySelectorAll('.generalMoodValue');
+
 const green = '#000';
 const yellow = '#000';
 const red = '#000';
 
-selectedMenu = 1; // 1 = main, 2 = care, 3 = options
-
-// main window
+// care room background
 const mainBG = document.getElementById('homeSection');
 
-/* ============
-    Buttons
-============ */
-// main menu
-const btnLeftMain = document.getElementById('MainleftButton');
-const btnCenterMain = document.getElementById('MainselectButton');
-const btnRightMain = document.getElementById('MainrightButton');
-
-// care menu
-const btnLeftCare = document.getElementById('CareleftButton');
-const btnCenterCare = document.getElementById('CareselectButton');
-const btnRightCare = document.getElementById('CarerightButton');
-
-// pet select menu
+// pet select menu arrows
 const leftArrow = document.getElementById('leftArrow');
 const centerArrow = document.getElementById('centerArrow');
 const rightArrow = document.getElementById('rightArrow');
+
+// mini-game display
+const gameCards = document.querySelectorAll('.gameCard');
+const gameMessage = document.getElementById('gameMessage');
+
+const miniGameScreens = ['game1', 'game2', 'game3'];
+
+const miniGameStatus = {
+    game1: document.getElementById('game1Status'),
+    game2: document.getElementById('game2Status'),
+    game3: document.getElementById('game3Status')
+};
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
@@ -133,11 +155,11 @@ document.getElementById('resetColors').addEventListener('click', resetColors);
 3 = hygene */
 let currentRoom = 1;
 let selectedPet = 1;
-let roomBG = {
-    kicthen: "url('./assets/x.png')",
+const roomBG = {
+    kitchen: "url('./assets/x.png')",
     bed: "url('./assets/y.png')",
-    Shower: "url('./assets/z.png')"
-}
+    shower: "url('./assets/z.png')"
+};
 
 // creatures (unused currently)
 let petSpecies = {
@@ -296,6 +318,8 @@ const startDeathAnimation = () => {
     }
         
     logEntry(`${pet.name} has died...`);
+    setScreen('home');
+    togglePetSelect();
     runner(deathFrames.length);
 };
 
@@ -304,11 +328,6 @@ window.addEventListener('resize', () => {
 
     if (pet.alive) {
         updateAnimation();
-
-        setTimeout(() => {
-            togglePetSelect();
-        }, 8000);
-        
     } else if (deathFrame !== undefined) {
         renderDeathFrame();
     }
@@ -335,8 +354,17 @@ const loadFromLocalstorage = () => {
     let innerColor = localStorage.getItem('innerColor');
     let frameColor = localStorage.getItem('frameColor');
 
-    eggshell.style.fill = "var(--" + frameColor +")";
-    innerEgg.style.fill = "var(--" + innerColor +")";
+    if (frameColor) {
+        eggshell.style.fill = frameColor.startsWith('#')
+            ? frameColor
+            : `var(--${frameColor})`;
+    }
+
+    if (innerColor) {
+        innerEgg.style.fill = innerColor.startsWith('#')
+            ? innerColor
+            : `var(--${innerColor})`;
+    }
 
     if (petState === null) {
         return;
@@ -428,11 +456,17 @@ const updateTime = () => {
 
 const togglePetSelect = () => {
     if (!pet.alive) {
+        activeScreen = 'home';
+        selectedMenuIndex = 1;
         petMenu.classList.remove('hidden');
+        renderPetSelection();
     } else {
         petMenu.classList.add('hidden');
     }
-}
+
+    updateScreenLabel();
+    renderScreenButtons();
+};
 
 const newPet = () => {
     return {
@@ -550,14 +584,6 @@ function runner(repeats) {
     }
 }
 
-// test death anim
-addEventListener("keydown", function(event) {
-    if (event.key === "x" || event.key === "X") {
-        startDeathAnimation();
-    }
-});
-
-
 const toggleLog = () => {
     if (logWindow.classList.contains('hidden')) {
         logWindow.classList.remove('hidden');
@@ -624,61 +650,79 @@ function resetColors() {
     eggshell.style.fill = "#f8b85b";
     innerEgg.style.fill = "#335ca7";
 
-    localStorage.setItem('frameColor', "#f8b85b");
-    localStorage.setItem('innerColor', "#335ca7");
+    localStorage.setItem('frameColor', '#f8b85b');
+    localStorage.setItem('innerColor', '#335ca7');
 }
 
 /* ======================
     core UI functions
 ====================== */
-const checkSelection = () => { // add selection to status bars as well
-    // clear all selections
+const checkSelection = () => {
     hungerContainer.classList.remove('selected');
     energyContainer.classList.remove('selected');
     hygeneContainer.classList.remove('selected');
 
-    leftArrow.classList.add('hidden');
-    centerArrow.classList.add('hidden');
-    rightArrow.classList.add('hidden');
-
-    // mark current selected room
-    if (currentRoom === 1) { // hunger
-        mainBG.style.backgroundImage = roomBG.kicthen;
+    if (currentRoom === 1) {
+        mainBG.style.backgroundImage = roomBG.kitchen;
         hungerContainer.classList.add('selected');
-        leftArrow.classList.remove('hidden');
-
-    } else if (currentRoom === 2) { // energy
+    } else if (currentRoom === 2) {
         mainBG.style.backgroundImage = roomBG.bed;
         energyContainer.classList.add('selected');
-        centerArrow.classList.remove('hidden');
-
-    } else if (currentRoom === 3) { // hygene
+    } else {
         mainBG.style.backgroundImage = roomBG.shower;
         hygeneContainer.classList.add('selected');
-        rightArrow.classList.remove('hidden');
     }
-}
+};
 
-// new pet select
-const newPetMenu = () => {
-    leftArrow.classList.add('hidden');
-    centerArrow.classList.add('hidden');
-    rightArrow.classList.add('hidden');
-    
-    // mark current selected room
-    if (selectedPet === 1) { 
-        leftArrow.classList.remove('hidden');
+const renderPetSelection = () => {
+    leftArrow.classList.toggle('hidden', selectedPet !== 1);
+    centerArrow.classList.toggle('hidden', selectedPet !== 2);
+    rightArrow.classList.toggle('hidden', selectedPet !== 3);
+};
 
-    } else if (selectedPet === 2) { 
-        centerArrow.classList.remove('hidden');
+const selectPreviousPet = () => {
+    selectedPet = selectedPet === 1 ? 3 : selectedPet - 1;
+    renderPetSelection();
+};
 
-    } else if (selectedPet === 3) { 
-        rightArrow.classList.remove('hidden');
+const selectNextPet = () => {
+    selectedPet = selectedPet === 3 ? 1 : selectedPet + 1;
+    renderPetSelection();
+};
+
+const petChoices = [
+    { species: 'cat', name: 'Mametchi', available: true },
+    { species: 'dog', name: 'TBD', available: false },
+    { species: 'bunny', name: 'TBD', available: false }
+];
+
+const createSelectedPet = () => {
+    const choice = petChoices[selectedPet - 1];
+
+    if (!choice.available) {
+        logEntry('That pet has not been implemented yet.');
+        return;
     }
-}
+
+    pet = newPet();
+    pet.species = choice.species;
+    pet.name = choice.name;
+    pet.anim = 'idle';
+    pet.pose = 1;
+
+    deathFrame = undefined;
+    petAnim();
+    updatePet();
+    togglePetSelect();
+    updateUI();
+
+    logEntry(`New pet selected, ${pet.name} (${pet.species})`);
+};
 
 function gameLoop() {
     tick++;
+
+    updateTime();
 
     if (!pet.alive) return;
 
@@ -692,33 +736,20 @@ function gameLoop() {
 
     if (tick % 240 === 0) { // every 4 minutes
         pet.hygene -= 1;
-    }   
+    }
 
-    updateTime();
     updateUI();
-    updatePet();
     updateMood();
+    updatePet();
 }
 
 /* ==============================
     status bars functionality
 ============================== */
-const updateGeneralBar = () => {
-    const average = (pet.hunger + pet.energy + pet.hygene) / 3;
-    generalBar.style.width = average + '%';
-
-    if (average > 50) {
-        generalBar.style.backgroundColor = green;
-    } else if (average > 20) {
-        generalBar.style.backgroundColor = yellow;
-    } else {
-        generalBar.style.backgroundColor = red;
-    }
-}
-
 const updateHungerBar = () => {
+    pet.hunger = Math.max(0, pet.hunger);
     hungerBar.style.width = pet.hunger + '%';
-    pet.hungry = false;
+    pet.hungry = pet.hunger <= 20;
 
     if (pet.hunger > 50) {
         hungerBar.style.backgroundColor = green;
@@ -726,17 +757,13 @@ const updateHungerBar = () => {
         hungerBar.style.backgroundColor = yellow;
     } else {
         hungerBar.style.backgroundColor = red;
-        pet.hungry = true;
     }
-    
-    if (pet.hunger <= 0) {
-        pet.hunger = 0;
-    }
-}
+};
 
 const updateEnergyBar = () => {
+    pet.energy = Math.max(0, pet.energy);
     energyBar.style.width = pet.energy + '%';
-    pet.tired = false;
+    pet.tired = pet.energy <= 20;
 
     if (pet.energy > 50) {
         energyBar.style.backgroundColor = green;
@@ -744,17 +771,13 @@ const updateEnergyBar = () => {
         energyBar.style.backgroundColor = yellow;
     } else {
         energyBar.style.backgroundColor = red;
-        pet.tired = true;
     }
-
-    if (pet.energy <= 0) {
-        pet.energy = 0;
-    }
-}
+};
 
 const updateHygeneBar = () => {
+    pet.hygene = Math.max(0, pet.hygene);
     hygeneBar.style.width = pet.hygene + '%';
-    pet.dirty = false;
+    pet.dirty = pet.hygene <= 20;
 
     if (pet.hygene > 50) {
         hygeneBar.style.backgroundColor = green;
@@ -762,157 +785,563 @@ const updateHygeneBar = () => {
         hygeneBar.style.backgroundColor = yellow;
     } else {
         hygeneBar.style.backgroundColor = red;
-        pet.dirty = true;
+    }
+};
+
+const updateGeneralMoodBar = () => {
+    let generalMood = 0;
+
+    if (pet.alive) {
+        generalMood = Math.round(
+            (pet.hunger + pet.energy + pet.hygene) / 3
+        );
     }
 
-    if (pet.hygene <= 0) {
-        pet.hygene = 0;
-    }
-}
+    generalMoodBars.forEach((bar) => {
+        bar.style.width = `${generalMood}%`;
+
+        if (generalMood > 50) {
+            bar.style.backgroundColor = green;
+        } else if (generalMood > 20) {
+            bar.style.backgroundColor = yellow;
+        } else {
+            bar.style.backgroundColor = red;
+        }
+    });
+
+    generalMoodValues.forEach((value) => {
+        value.textContent = `${generalMood}%`;
+    });
+};
 
 const updateAlerts = () => {
-    if (pet.hungry) {
-        hungryBubble.classList.remove('hidden');
-        } else {
-            hungryBubble.classList.add('hidden');
-    }
-
-     if (pet.tired) {
-        tiredBubble.classList.remove('hidden');
-        } else {
-            tiredBubble.classList.add('hidden');
-    }
-
-    if (pet.dirty) {
-        dirtyBubble.classList.remove('hidden');
-        } else {
-            dirtyBubble.classList.add('hidden');
-    }
-}
+    hungryBubble.classList.toggle('hidden', !pet.hungry);
+    tiredBubble.classList.toggle('hidden', !pet.tired);
+    dirtyBubble.classList.toggle('hidden', !pet.dirty);
+};
 
 const updateStatusbars = () => {
     updateHungerBar();
     updateEnergyBar();
     updateHygeneBar();
-    updateGeneralBar();
-}
+    updateGeneralMoodBar();
+};
+
+const updatePetName = () => {
+    petNameDisplay.textContent = pet.alive ? pet.name : 'No pet selected';
+};
 
 const updateUI = () => {
     updateStatusbars();
     updateAlerts();
+    updatePetName();
     checkSelection();
-}
+};
 
 /* =======================
-    player interaction
+    screen-specific actions
 ======================= */
-// multi-functional buttons based on UI
-// Main window buttons
-const pressedLeftMain = () => {
-    if (!pet.alive) {
-        if (selectedPet === 1) {
-            selectedPet = 3;
-        } else {
-            selectedPet -= 1;
-        }
-        newPetMenu();
-        return;
-    }
-}
+const interactWithPet = () => {
+    if (!pet.alive || animOverride) return;
 
-const pressedRightMain = () => {
-    if (!pet.alive) {
-        if (selectedPet === 3) {
-            selectedPet = 1;
-        } else {
-            selectedPet += 1;
-        }
-        newPetMenu();
-        return;
-    }
-}
+    pet.anim = 'happy';
+    animOverride = true;
+    updatePet();
+    logEntry(`${pet.name} enjoyed the attention.`);
 
-const pressedCenterMain = () => {
-    if (!pet.alive) {
-        pet = newPet();
-        pet.species = 'cat';
-        pet.name = 'Mametchi'
-        
-        pet.anim = 'idle';
-        pet.pose = 1;
-        petAnim();
+    setTimeout(() => {
+        animOverride = false;
+        updateMood();
         updatePet();
-        togglePetSelect();
-        
-        logEntry(`New pet selected, ${pet.name} (${pet.species})`)
+    }, 2500);
+};
+
+const feedPet = () => {
+    if (!pet.alive || animOverride) return;
+    currentRoom = 1;
+    checkSelection();
+    petFeeding();
+    logEntry(`${pet.name} was fed.`);
+};
+
+const restPet = () => {
+    if (!pet.alive || animOverride) return;
+    currentRoom = 2;
+    checkSelection();
+    petSleeping();
+    logEntry(`${pet.name} went to sleep.`);
+};
+
+const cleanPet = () => {
+    if (!pet.alive || animOverride) return;
+    currentRoom = 3;
+    checkSelection();
+    petBathing();
+    logEntry(`${pet.name} had a bath.`);
+};
+
+let selectedGame = 0;
+
+const gameNames = ['Game 1', 'Game 2', 'Game 3'];
+
+const renderGameSelection = () => {
+    gameCards.forEach((card, index) => {
+        card.classList.toggle('active', index === selectedGame);
+    });
+
+    gameMessage.textContent = `${gameNames[selectedGame]} selected — press the center button to open it.`;
+};
+
+const selectPreviousGame = () => {
+    selectedGame = selectedGame === 0 ? gameCards.length - 1 : selectedGame - 1;
+    renderGameSelection();
+};
+
+const selectNextGame = () => {
+    selectedGame = selectedGame === gameCards.length - 1 ? 0 : selectedGame + 1;
+    renderGameSelection();
+};
+
+const launchMiniGame = (gameIndex, gameName) => {
+    const gameScreen = miniGameScreens[gameIndex];
+
+    if (!gameScreen) return;
+
+    selectedGame = gameIndex;
+    renderGameSelection();
+    setScreen(gameScreen);
+    logEntry(`${gameName} opened.`);
+};
+
+const launchGame1 = () => launchMiniGame(0, 'Game 1');
+const launchGame2 = () => launchMiniGame(1, 'Game 2');
+const launchGame3 = () => launchMiniGame(2, 'Game 3');
+
+const launchSelectedGame = () => {
+    const gameLaunchers = [
+        launchGame1,
+        launchGame2,
+        launchGame3
+    ];
+
+    gameLaunchers[selectedGame]?.();
+};
+
+const selectPreviousCareRoom = () => {
+    currentRoom = currentRoom === 1 ? 3 : currentRoom - 1;
+    checkSelection();
+};
+
+const selectNextCareRoom = () => {
+    currentRoom = currentRoom === 3 ? 1 : currentRoom + 1;
+    checkSelection();
+};
+
+const activateSelectedCareRoom = () => {
+    const careActions = [feedPet, restPet, cleanPet];
+    careActions[currentRoom - 1]?.();
+};
+
+/* ==================================
+    individual mini-game button hooks
+================================== */
+const updateMiniGameStatus = (gameScreen, message) => {
+    const statusElement = miniGameStatus[gameScreen];
+
+    if (statusElement) {
+        statusElement.textContent = message;
+    }
+};
+// placeholder functions
+const game1Left = () => {
+    updateMiniGameStatus('game1', 'Game 1: left button pressed.');
+};
+
+const game1Center = () => {
+    updateMiniGameStatus('game1', 'Game 1: center button pressed.');
+};
+
+const game1Right = () => {
+    updateMiniGameStatus('game1', 'Game 1: right button pressed.');
+};
+
+const game2Left = () => {
+    updateMiniGameStatus('game2', 'Game 2: left button pressed.');
+};
+
+const game2Center = () => {
+    updateMiniGameStatus('game2', 'Game 2: center button pressed.');
+};
+
+const game2Right = () => {
+    updateMiniGameStatus('game2', 'Game 2: right button pressed.');
+};
+
+const game3Left = () => {
+    updateMiniGameStatus('game3', 'Game 3: left button pressed.');
+};
+
+const game3Center = () => {
+    updateMiniGameStatus('game3', 'Game 3: center button pressed.');
+};
+
+const game3Right = () => {
+    updateMiniGameStatus('game3', 'Game 3: right button pressed.');
+};
+
+const miniGameButtonActions = {
+    game1: {
+        left: { label: 'Game 1 left action', onPress: game1Left },
+        center: { label: 'Game 1 center action', onPress: game1Center },
+        right: { label: 'Game 1 right action', onPress: game1Right }
+    },
+    game2: {
+        left: { label: 'Game 2 left action', onPress: game2Left },
+        center: { label: 'Game 2 center action', onPress: game2Center },
+        right: { label: 'Game 2 right action', onPress: game2Right }
+    },
+    game3: {
+        left: { label: 'Game 3 left action', onPress: game3Left },
+        center: { label: 'Game 3 center action', onPress: game3Center },
+        right: { label: 'Game 3 right action', onPress: game3Right }
+    }
+};
+
+/* =======================
+    screen and button system
+======================= */
+const getSelectedMenu = () => menuScreens[selectedMenuIndex];
+
+const updateScreenLabel = () => {
+    if (!pet.alive) {
+        screenLabel.textContent = 'Choose a pet';
         return;
     }
 
-    if (selectedMenu === 1) {
-        console.log('main menu');
-    } else if (selectedMenu === 2) {
-        console.log('care menu');
-    } else if (selectedMenu === 3) {
-        console.log('options menu');
+    screenLabel.textContent = activeScreen === 'home'
+        ? screenNames[getSelectedMenu()]
+        : screenNames[activeScreen];
+};
+
+const selectPreviousMenu = () => {
+    selectedMenuIndex =
+        selectedMenuIndex === 0
+            ? menuScreens.length - 1
+            : selectedMenuIndex - 1;
+
+    updateScreenLabel();
+};
+
+const selectNextMenu = () => {
+    selectedMenuIndex =
+        selectedMenuIndex === menuScreens.length - 1
+            ? 0
+            : selectedMenuIndex + 1;
+
+    updateScreenLabel();
+};
+
+const enterSelectedMenu = () => {
+    const selectedMenu = getSelectedMenu();
+
+    if (selectedMenu === 'home') {
+        interactWithPet();
+        return;
     }
-}
 
+    setScreen(selectedMenu);
+};
 
-// Care window buttons
-const pressedLeftCare = () => {
-    if (currentRoom <= 1) {
-        currentRoom = 3
-    } else {
-        currentRoom -= 1;
+const centerHoldCount = 3000;
+
+const returnFromCurrentScreen = () => {
+    if (!pet.alive || activeScreen === 'home') return;
+
+    if (miniGameScreens.includes(activeScreen)) {
+        setScreen('games');
+        return;
     }
-    checkSelection();
-}
 
-const pressedRightCare = () => {
-    if (currentRoom >= 3) {
-        currentRoom = 1
-    } else {
-        currentRoom += 1;
+    setScreen('home');
+};
+
+const makeDeviceButton = ({
+    id,
+    label,
+    iconClass,
+    onPress,
+    onHold = null,
+    holdDuration = centerHoldCount
+}) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.id = id;
+    button.setAttribute('aria-label', label);
+    button.title = label;
+
+    if (iconClass) {
+        const icon = document.createElement('i');
+        icon.className = iconClass;
+        icon.setAttribute('aria-hidden', 'true');
+        button.appendChild(icon);
     }
-    checkSelection();
-}
 
-const pressedCenterCare = () => {
-    if (currentRoom === 1) {
-        petFeeding();        
+    let holdTimer = null;
+    let holdTriggered = false;
 
-    } else if (currentRoom === 2) {
-        if (!pet.alive) { 
-            pet.species = 'TBD';
-            console.log('not implemented yet');
+    const cancelHoldTimer = () => {
+        if (holdTimer !== null) {
+            clearTimeout(holdTimer);
+            holdTimer = null;
+        }
+    };
+
+    if (onHold) {
+        button.addEventListener('pointerdown', (event) => {
+            if (event.button !== 0) return;
+
+            holdTriggered = false;
+            cancelHoldTimer();
+
+            holdTimer = setTimeout(() => {
+                holdTimer = null;
+                holdTriggered = true;
+                onHold();
+            }, holdDuration);
+        });
+
+        button.addEventListener('pointerup', cancelHoldTimer);
+        button.addEventListener('pointercancel', cancelHoldTimer);
+        button.addEventListener('pointerleave', cancelHoldTimer);
+    }
+
+    button.addEventListener('click', (event) => {
+        if (holdTriggered) {
+            event.preventDefault();
+            event.stopPropagation();
+            holdTriggered = false;
             return;
         }
-        petSleeping();
 
-    } else if (currentRoom === 3) {
-        if (!pet.alive) { 
-            pet.species = 'TBD';
-            console.log('not implemented yet');
-            return;
-        }
-        petBathing();
-    }
-    
+        onPress();
+    });
+
+    return button;
+};
+
+const getCurrentButtonActions = () => {
     if (!pet.alive) {
-        pet.alive = true;      
-        togglePetSelect();
-    } else { 
-        updateStatusbars();
+        return {
+            left: {
+                label: 'Previous pet',
+                onPress: selectPreviousPet
+            },
+            center: {
+                label: 'Choose pet',
+                onPress: createSelectedPet
+            },
+            right: {
+                label: 'Next pet',
+                onPress: selectNextPet
+            }
+        };
     }
-}
 
-btnLeftMain.addEventListener('click', pressedLeftMain);
-btnCenterMain.addEventListener('click', pressedCenterMain);
-btnRightMain.addEventListener('click', pressedRightMain);
+    if (miniGameButtonActions[activeScreen]) {
+        return miniGameButtonActions[activeScreen];
+    }
 
-btnLeftCare.addEventListener('click', pressedLeftCare);
-btnCenterCare.addEventListener('click', pressedCenterCare);
-btnRightCare.addEventListener('click', pressedRightCare);
+    if (activeScreen === 'care') {
+        return {
+            left: {
+                label: 'Previous care option',
+                onPress: selectPreviousCareRoom
+            },
+            center: {
+                label: 'Use selected care option',
+                onPress: activateSelectedCareRoom
+            },
+            right: {
+                label: 'Next care option',
+                onPress: selectNextCareRoom
+            }
+        };
+    }
+
+    if (activeScreen === 'games') {
+        return {
+            left: {
+                label: 'Previous mini-game',
+                onPress: selectPreviousGame
+            },
+            center: {
+                label: 'Open selected mini-game',
+                onPress: launchSelectedGame
+            },
+            right: {
+                label: 'Next mini-game',
+                onPress: selectNextGame
+            }
+        };
+    }
+
+    return {
+        left: {
+            label: 'Previous menu',
+            onPress: selectPreviousMenu
+        },
+        center: {
+            label: 'Open selected menu',
+            onPress: enterSelectedMenu
+        },
+        right: {
+            label: 'Next menu',
+            onPress: selectNextMenu
+        }
+    };
+};
+
+const renderScreenButtons = () => {
+    const actions = getCurrentButtonActions();
+
+    const leftButton = makeDeviceButton({
+        id: 'MainleftButton',
+        label: actions.left.label,
+        iconClass: 'fas fa-arrow-circle-left',
+        onPress: actions.left.onPress
+    });
+
+    const centerButton = makeDeviceButton({
+        id: 'MainselectButton',
+        label: activeScreen === 'home'
+            ? actions.center.label
+            : `${actions.center.label} — hold 3 seconds to return`,
+        onPress: actions.center.onPress,
+        onHold: activeScreen === 'home' ? null : returnFromCurrentScreen
+    });
+
+    const rightButton = makeDeviceButton({
+        id: 'MainrightButton',
+        label: actions.right.label,
+        iconClass: 'fas fa-arrow-circle-right',
+        onPress: actions.right.onPress
+    });
+
+    // Remove the previous buttons and their listeners, then insert
+    // visually identical replacements with this screen's functions.
+    buttonMount.replaceChildren(leftButton, centerButton, rightButton);
+};
+const moveScreenLabel = () => {
+    const activeElement = screenElements[activeScreen];
+
+    if (!activeElement) return;
+
+    if (activeScreen === 'care') {
+        const statusBars = document.getElementById('statusBarWrapper');
+        statusBars?.insertAdjacentElement('afterend', screenLabel);
+        return;
+    }
+
+    const moodBar = activeElement.querySelector('.generalMoodWrapper');
+
+    if (moodBar) {
+        moodBar.insertAdjacentElement('afterend', screenLabel);
+        return;
+    }
+
+    activeElement.insertAdjacentElement('afterbegin', screenLabel);
+};
+
+const setScreen = (screenName) => {
+    if (!screenElements[screenName]) return;
+    if (!pet.alive && screenName !== 'home') return;
+
+    activeScreen = screenName;
+
+    if (screenName !== 'home') {
+        const menuIndex = menuScreens.indexOf(screenName);
+        if (menuIndex !== -1) selectedMenuIndex = menuIndex;
+    }
+
+    Object.entries(screenElements).forEach(([name, element]) => {
+        element.classList.toggle('noDisplay', name !== activeScreen);
+    });
+
+    moveScreenLabel();
+    updateScreenLabel();
+    renderScreenButtons();
+
+    if (activeScreen === 'care') {
+        checkSelection();
+    }
+
+    if (activeScreen === 'games') {
+        renderGameSelection();
+    }
+
+    updatePet();
+};
+
+const activateCenterButton = () => {
+    document.getElementById('MainselectButton')?.click();
+};
+
+const handleKeyboardControls = (event) => {
+    const targetTag = event.target.tagName;
+    if (targetTag === 'INPUT' || targetTag === 'TEXTAREA' || targetTag === 'SELECT') {
+        return;
+    }
+
+    if ((event.key === 'x' || event.key === 'X') && pet.alive) {
+        startDeathAnimation();
+        return;
+    }
+
+    if (!pet.alive) {
+        if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            selectPreviousPet();
+        } else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            selectNextPet();
+        } else if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            createSelectedPet();
+        }
+        return;
+    }
+
+    if (event.key === 'Escape') {
+        event.preventDefault();
+
+        if (miniGameScreens.includes(activeScreen)) {
+            setScreen('games');
+        } else {
+            setScreen('home');
+        }
+
+        return;
+    }
+
+    if (event.key === 'Home') {
+        event.preventDefault();
+        setScreen('home');
+        return;
+    }
+
+    if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        document.getElementById('MainleftButton')?.click();
+    } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        document.getElementById('MainrightButton')?.click();
+    } else if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        activateCenterButton();
+    }
+};
+
+document.addEventListener('keydown', handleKeyboardControls);
 
 // options panel drag logic
 optionsPanel.addEventListener('mousedown', (event) => {
@@ -1000,16 +1429,17 @@ const init = () => {
     tick = 0;
     setPetWrapperSize();
     loadFromLocalstorage();
-    updateUI();
-    setInterval(gameLoop, 1000);
-    setInterval(saveToLocalStorage, 300000); // 5min periodic save
-    petAnim();
-    updateMood();
     logWindow.innerHTML = localStorage.getItem('eventLog') || '';
 
-    if (!pet.alive) {
-        togglePetSelect();
-    }
-}
+    setScreen('home');
+    togglePetSelect();
+    updateTime();
+    updateUI();
+    petAnim();
+    updateMood();
+    updatePet();
 
+    setInterval(gameLoop, 1000);
+    setInterval(saveToLocalStorage, 300000); // 5min periodic save
+};
 init();
