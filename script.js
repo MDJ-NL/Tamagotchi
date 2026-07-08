@@ -19,7 +19,7 @@ const screenNames = {
     home: 'Home',
     care: 'Care',
     games: 'Mini-games',
-    game1: 'Game 1',
+    game1: 'Block Drop',
     game2: 'Game 2',
     game3: 'Game 3'
 };
@@ -66,6 +66,32 @@ const miniGameStatus = {
     game3: document.getElementById('game3Status')
 };
 
+/*========================
+ minigame declarations
+ ====================== */
+const game1Window = document.getElementById('game1Container');
+const game1MainMenu = document.getElementById('game1MainMenu');
+const game1Playfield = document.getElementById('game1Playfield');
+const game1Player = document.getElementById('g1Player');
+const game1ScoreDisplay = document.getElementById('game1Score');
+const game1MissesDisplay = document.getElementById('game1Misses');
+const game1HighScoreDisplay = document.getElementById('game1HighScore');
+const game1GameOver = document.getElementById('game1GameOver');
+const game1FinalScore = document.getElementById('game1FinalScore');
+
+let game1Active = false;
+let game2Active = false;
+let game3Active = false;
+
+let game1CurrentScore = 0;
+let game1HighScore = Number(localStorage.getItem('game1HighScore')) || 0;
+let game1Misses = 0;
+let game1PlayerLane = 1;
+let game1AnimationFrame = null;
+let game1LastFrameTime = 0;
+let game1SpawnTimer = 0;
+let game1FallingBlocks = [];
+ 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
 
@@ -425,7 +451,7 @@ const updateTime = () => {
     // Debug number
     //currentHour += 8;
     //currentMinute = 35;
-
+    
     // time of day
     if (currentHour >= 6 && currentHour <= 12) {
         ToD = 'Morning';
@@ -438,13 +464,13 @@ const updateTime = () => {
     }
 
     // background color cycle
-   if (currentHour == 5 && currentMinute >= 30) {
+   if (currentHour >= 5 && currentHour < 6) {
         document.body.style.backgroundColor = "var(--" + 'tod-dawn' +")";
-   } else if (currentHour == 6 && currentMinute >= 30) {
+   } else if (currentHour >= 6 && currentHour < 19) {
         document.body.style.backgroundColor = "var(--" + 'tod-day' +")";
-   } else if (currentHour == 19 && currentMinute >= 30) {
+   } else if (currentHour >= 19 && currentHour < 20) {
         document.body.style.backgroundColor = "var(--" + 'tod-dusk' +")";
-   } else if (currentHour == 20 && currentMinute >= 30) {
+   } else if (currentHour >= 20) {
         document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
    }
     
@@ -882,14 +908,14 @@ const cleanPet = () => {
 
 let selectedGame = 0;
 
-const gameNames = ['Game 1', 'Game 2', 'Game 3'];
+const gameNames = ['Block Drop', 'Game 2', 'Game 3'];
 
 const renderGameSelection = () => {
     gameCards.forEach((card, index) => {
         card.classList.toggle('active', index === selectedGame);
     });
 
-    gameMessage.textContent = `${gameNames[selectedGame]} selected — press the center button to open it.`;
+    // gameMessage.textContent = `${gameNames[selectedGame]} selected — press the center button to open it.`;
 };
 
 const selectPreviousGame = () => {
@@ -913,7 +939,7 @@ const launchMiniGame = (gameIndex, gameName) => {
     logEntry(`${gameName} opened.`);
 };
 
-const launchGame1 = () => launchMiniGame(0, 'Game 1');
+const launchGame1 = () => launchMiniGame(0, 'Block Drop');
 const launchGame2 = () => launchMiniGame(1, 'Game 2');
 const launchGame3 = () => launchMiniGame(2, 'Game 3');
 
@@ -952,17 +978,21 @@ const updateMiniGameStatus = (gameScreen, message) => {
         statusElement.textContent = message;
     }
 };
-// placeholder functions
+
 const game1Left = () => {
-    updateMiniGameStatus('game1', 'Game 1: left button pressed.');
+    if (!game1Active) return;
+    moveGame1Player(-1);
 };
 
 const game1Center = () => {
-    updateMiniGameStatus('game1', 'Game 1: center button pressed.');
+    if (!game1Active) {
+        startGame1();
+    }
 };
 
 const game1Right = () => {
-    updateMiniGameStatus('game1', 'Game 1: right button pressed.');
+    if (!game1Active) return;
+    moveGame1Player(1);
 };
 
 const game2Left = () => {
@@ -991,9 +1021,9 @@ const game3Right = () => {
 
 const miniGameButtonActions = {
     game1: {
-        left: { label: 'Game 1 left action', onPress: game1Left },
-        center: { label: 'Game 1 center action', onPress: game1Center },
-        right: { label: 'Game 1 right action', onPress: game1Right }
+        left: { label: 'Move catcher left', onPress: game1Left },
+        center: { label: 'Start or restart Block Drop', onPress: game1Center },
+        right: { label: 'Move catcher right', onPress: game1Right }
     },
     game2: {
         left: { label: 'Game 2 left action', onPress: game2Left },
@@ -1006,6 +1036,190 @@ const miniGameButtonActions = {
         right: { label: 'Game 3 right action', onPress: game3Right }
     }
 };
+
+/* =======================
+    minigame functionality
+======================= */
+const GAME1_MAX_MISSES = 3;
+const GAME1_LANE_COUNT = 3;
+const GAME1_BLOCK_STYLES = ['blockPink', 'blockBlue', 'blockYellow', 'blockGreen'];
+
+function updateGame1Hud() {
+    game1ScoreDisplay.textContent = game1CurrentScore;
+    game1MissesDisplay.textContent = game1Misses;
+    game1HighScoreDisplay.textContent = game1HighScore;
+}
+
+function setGame1PlayerLane() {
+    const laneCenter = ((game1PlayerLane + 0.5) / GAME1_LANE_COUNT) * 100;
+    game1Player.style.left = `${laneCenter}%`;
+}
+
+function moveGame1Player(direction) {
+    game1PlayerLane = Math.max(
+        0,
+        Math.min(GAME1_LANE_COUNT - 1, game1PlayerLane + direction)
+    );
+
+    setGame1PlayerLane();
+}
+
+function clearGame1Blocks() {
+    game1FallingBlocks.forEach((block) => block.element.remove());
+    game1FallingBlocks = [];
+}
+
+function stopGame1Loop() {
+    game1Active = false;
+
+    if (game1AnimationFrame !== null) {
+        cancelAnimationFrame(game1AnimationFrame);
+        game1AnimationFrame = null;
+    }
+}
+
+function prepareGame1Menu() {
+    stopGame1Loop();
+    clearGame1Blocks();
+
+    game1CurrentScore = 0;
+    game1Misses = 0;
+    game1PlayerLane = 1;
+
+    game1MainMenu.classList.remove('noDisplay');
+    game1Window.classList.add('noDisplay');
+    game1GameOver.classList.add('noDisplay');
+
+    updateGame1Hud();
+    setGame1PlayerLane();
+}
+
+function startGame1() {
+    stopGame1Loop();
+    clearGame1Blocks();
+
+    game1CurrentScore = 0;
+    game1Misses = 0;
+    game1PlayerLane = 1;
+    game1SpawnTimer = 0;
+    game1LastFrameTime = 0;
+    game1Active = true;
+
+    game1MainMenu.classList.add('noDisplay');
+    game1Window.classList.remove('noDisplay');
+    game1GameOver.classList.add('noDisplay');
+
+    updateGame1Hud();
+    setGame1PlayerLane();
+
+    game1AnimationFrame = requestAnimationFrame(game1Loop);
+    logEntry('Block Drop started.');
+}
+
+function spawnGame1Block() {
+    const lane = Math.floor(Math.random() * GAME1_LANE_COUNT);
+    const block = document.createElement('div');
+    const blockStyle = GAME1_BLOCK_STYLES[
+        Math.floor(Math.random() * GAME1_BLOCK_STYLES.length)
+    ];
+
+    block.className = `game1FallingBlock ${blockStyle}`;
+    block.style.left = `${((lane + 0.5) / GAME1_LANE_COUNT) * 100}%`;
+    block.style.top = '-3vmin';
+
+    game1Playfield.appendChild(block);
+    game1FallingBlocks.push({
+        element: block,
+        lane,
+        y: -block.offsetHeight
+    });
+}
+
+function catchGame1Block(index) {
+    const [block] = game1FallingBlocks.splice(index, 1);
+    block.element.classList.add('caught');
+
+    setTimeout(() => block.element.remove(), 120);
+
+    game1CurrentScore += 1;
+    updateGame1Hud();
+}
+
+function missGame1Block(index) {
+    const [block] = game1FallingBlocks.splice(index, 1);
+    block.element.remove();game1Playfield
+
+    game1Misses += 1;
+    updateGame1Hud();
+
+    if (game1Misses >= GAME1_MAX_MISSES) {
+        endGame1();
+    }
+}
+
+function endGame1() {
+    stopGame1Loop();
+    clearGame1Blocks();
+
+    if (game1CurrentScore > game1HighScore) {
+        game1HighScore = game1CurrentScore;
+        localStorage.setItem('game1HighScore', game1HighScore);
+    } else {
+    }
+
+    game1FinalScore.textContent = `Score: ${game1CurrentScore}`;
+    game1GameOver.classList.remove('noDisplay');
+    updateGame1Hud();
+    logEntry(`Block Drop ended with a score of ${game1CurrentScore}.`);
+}
+
+function game1Loop(timestamp) {
+    if (!game1Active) return;
+
+    if (game1LastFrameTime === 0) {
+        game1LastFrameTime = timestamp;
+    }
+    // limit deltaSeconds to max 0.05 to prevent jumps in block movement
+    const deltaSeconds = Math.min((timestamp - game1LastFrameTime) / 1000, 0.05);
+    game1LastFrameTime = timestamp;
+    game1SpawnTimer += deltaSeconds * 1000;
+    // calculate spawn interval and fall speed based onscore
+    const spawnInterval = Math.max(430, 1050 - game1CurrentScore * 24);
+    const fallSpeed = 58 + game1CurrentScore * 2.8;
+
+    if (game1SpawnTimer >= spawnInterval) {
+        game1SpawnTimer -= spawnInterval;
+        spawnGame1Block();
+    }
+
+    const playerTop = game1Player.offsetTop;
+    const playerBottom = playerTop + game1Player.offsetHeight;
+    const playfieldHeight = game1Playfield.clientHeight;
+
+    for (let index = game1FallingBlocks.length - 1; index >= 0; index -= 1) {
+        const block = game1FallingBlocks[index];
+        const blockHeight = block.element.offsetHeight;
+
+        block.y += fallSpeed * deltaSeconds;
+        block.element.style.top = `${block.y}px`;
+
+        const blockBottom = block.y + blockHeight;
+        const overlapsPlayer = blockBottom >= playerTop && block.y <= playerBottom;
+
+        if (overlapsPlayer && block.lane === game1PlayerLane) {
+            catchGame1Block(index);
+            continue;
+        }
+
+        if (block.y > playfieldHeight) {
+            missGame1Block(index);
+
+            if (!game1Active) return;
+        }
+    }
+
+    game1AnimationFrame = requestAnimationFrame(game1Loop);
+}
 
 /* =============================
     screen and button system
@@ -1076,13 +1290,11 @@ const makeDeviceButton = ({
     const button = document.createElement('button');
     button.type = 'button';
     button.id = id;
-    button.setAttribute('aria-label', label);
     button.title = label;
 
     if (iconClass) {
         const icon = document.createElement('i');
         icon.className = iconClass;
-        icon.setAttribute('aria-hidden', 'true');
         button.appendChild(icon);
     }
 
@@ -1097,6 +1309,7 @@ const makeDeviceButton = ({
     };
 
     if (onHold) {
+        
         button.addEventListener('pointerdown', (event) => {
             if (event.button !== 0) return;
 
@@ -1104,6 +1317,7 @@ const makeDeviceButton = ({
             cancelHoldTimer();
 
             holdTimer = setTimeout(() => {
+                if (game1Active == true || game2Active == true || game3Active == true) return
                 holdTimer = null;
                 holdTriggered = true;
                 onHold();
@@ -1215,7 +1429,7 @@ const renderScreenButtons = () => {
         id: 'MainselectButton',
         label: activeScreen === 'home'
             ? actions.center.label
-            : `${actions.center.label} — hold 3 seconds to return`,
+            : `${actions.center.label} — hold 2 seconds to return`,
         onPress: actions.center.onPress,
         onHold: activeScreen === 'home' ? null : returnFromCurrentScreen
     });
@@ -1256,6 +1470,12 @@ const setScreen = (screenName) => {
     if (!screenElements[screenName]) return;
     if (!pet.alive && screenName !== 'home') return;
 
+    const previousScreen = activeScreen;
+
+    if (previousScreen === 'game1' && screenName !== 'game1') {
+        prepareGame1Menu();
+    }
+
     activeScreen = screenName;
 
     if (screenName !== 'home') {
@@ -1277,6 +1497,10 @@ const setScreen = (screenName) => {
 
     if (activeScreen === 'games') {
         renderGameSelection();
+    }
+
+    if (activeScreen === 'game1') {
+        prepareGame1Menu();
     }
 
     updatePet();
@@ -1430,6 +1654,7 @@ const init = () => {
     setPetWrapperSize();
     loadFromLocalstorage();
     logWindow.innerHTML = localStorage.getItem('eventLog') || '';
+    prepareGame1Menu();
 
     setScreen('home');
     togglePetSelect();
