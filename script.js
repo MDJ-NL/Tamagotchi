@@ -838,9 +838,9 @@ const updateUI = () => {
     checkSelection();
 };
 
-/* =======================
+/* ============================
     screen-specific actions
-======================= */
+============================ */
 const interactWithPet = () => {
     if (!pet.alive || animOverride) return;
 
@@ -942,9 +942,9 @@ const activateSelectedCareRoom = () => {
     careActions[currentRoom - 1]?.();
 };
 
-/* ==================================
+/* ======================================
     individual mini-game button hooks
-================================== */
+====================================== */
 const updateMiniGameStatus = (gameScreen, message) => {
     const statusElement = miniGameStatus[gameScreen];
 
@@ -1007,9 +1007,9 @@ const miniGameButtonActions = {
     }
 };
 
-/* =======================
+/* =============================
     screen and button system
-======================= */
+============================= */
 const getSelectedMenu = () => menuScreens[selectedMenuIndex];
 
 const updateScreenLabel = () => {
@@ -1052,7 +1052,7 @@ const enterSelectedMenu = () => {
     setScreen(selectedMenu);
 };
 
-const centerHoldCount = 3000;
+const centerHoldCount = 2000;
 
 const returnFromCurrentScreen = () => {
     if (!pet.alive || activeScreen === 'home') return;
@@ -1227,10 +1227,10 @@ const renderScreenButtons = () => {
         onPress: actions.right.onPress
     });
 
-    // Remove the previous buttons and their listeners, then insert
-    // visually identical replacements with this screen's functions.
+    // Remove the previous buttons and replace with new ones
     buttonMount.replaceChildren(leftButton, centerButton, rightButton);
 };
+
 const moveScreenLabel = () => {
     const activeElement = screenElements[activeScreen];
 
