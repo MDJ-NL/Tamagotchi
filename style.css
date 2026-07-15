@@ -316,6 +316,7 @@ body{
 
                     .petSelect {
                         display: flex;
+                        justify-content: space-around;
 
                         min-height: 3.5vmin;
                         padding: 0.9vmin 0;
@@ -341,7 +342,21 @@ body{
                     }
 
                     .petImages {
-                        .previewCat {
+                        display: flex;
+                        justify-content: space-around;
+
+                        .previewEgg1 {
+                            background: url("./assets/pet one sprites verbeterd (2 breed).png");
+
+                            height: 8vmin;
+                            width: 8vmin;
+
+                            background-repeat: no-repeat;
+                            background-size: 300%;
+                            background-position: -1.6vmin -1.8vmin;
+                        }
+
+                        .previewEgg2 {
                             background: url("./assets/pet one sprites verbeterd (2 breed).png");
 
                             height: 8vmin;
@@ -357,7 +372,6 @@ body{
                         height: 10%;
 
                         display: flex;
-                        justify-content: center;
                         align-items: center;
                         justify-content: space-around;
 
@@ -366,8 +380,6 @@ body{
                         }
                     }
                 }
-
-
 
                 #homeSection{
                     flex: 1;
