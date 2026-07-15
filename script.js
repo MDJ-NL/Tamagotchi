@@ -188,12 +188,93 @@ const roomBG = {
     shower: "url('./assets/z.png')"
 };
 
-// creatures (unused currently)
-let petSpecies = {
-    cat: "url('./assets/pet one sprites verbeterd (2 breed).png')",
-    dog: "",
-    bunny: ""
+// creature spirtes & names
+const petSpecies = {
+    Eggs: {
+        Egg1: {
+            sprite: "./assets/new sprites/upscaled/babies/Hatching_Baby_Babytchi.webp",
+            name: "Unborn Babytchi"
+        },
+        Egg2: {
+            sprite: "./assets/new sprites/upscaled/babies/Hatching_Baby_Shirobabytchi.webp",
+            name: "Unborn Shirobabytchi"
+        }
+    },
+    Babies: { 
+        Babytchi: { // > Tonmuratchi
+            sprite: "./assets/new sprites/upscaled/babies/Baby_Babytchi.webp",
+            name: "Babytchi"
+        },
+        Shirobabytchi: { // >  Muratchi
+            sprite: "./assets/new sprites/upscaled/babies/Baby_Shirobabytchi.webp",
+            name: "Shirobabytchi"
+        }
+    },
+    Children: { 
+        Marutchi: { // > Hasitamatchi & Kuchitamatchi
+            sprite: "./assets/new sprites/upscaled/children/Child_Marutchi.webp",
+            name: "Marutchi"
+        },
+        Tonmarutchi: { // > Tongaritchi & Tamatchi
+            sprite: "./assets/new sprites/upscaled/children/Child_Tonmarutchi.webp",
+            name: "Tonmarutchi"
+        }
+    },
+    Teens: {
+        Tamatchi: { // > Mametchi & Nyatchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Tamatchi.webp",
+            name: "Tamatchi"
+        },
+        Hasitamatchi: { // > Ginjirotchi & Kusatchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Hashitamatchi.webp",
+            name: "Hasitamatchi"
+        },
+        Kuchitamatchi: { // > Kuchipatchi & Nyorotchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Kuchitamatchi.webp",
+            name: "Kuchitamatchi"
+        },
+        Tongaritchi: { // > Pochitchi & Mimitchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Tongaritchi.webp",
+            name: "Tongaritchi"
+        }
+    },
+    Adults: {
+        Mametchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Mametchi.webp",
+            name: "Mametchi"
+        },
+        Mimitchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Mimitchi.webp",
+            name: "Mimitchi"
+        },
+        Kusatchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Kusatchi.webp",
+            name: "Kusatchi"
+        },
+        Kuchipatchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Kuchipatchi.webp",
+            name: "Kuchipatchi"
+        },
+        Ginjirotchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Ginjirotchi.webp",
+            name: "Ginjirotchi"
+        },
+        Nyatchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Nyatchi.webp",
+            name: "Nyatchi"
+        },
+        Nyorotchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adults_Nyorotchi.webp",
+            name: "Nyorotchi"
+        },
+        Pochitchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adults_Pochitchi.webp",
+            name: "Pochitchi"
+        }
+    }
 }
+// default fallback
+let newPetSprite = petSpecies.Adults.Mametchi.sprite;
 
 let pet = {
     hunger:     80,
@@ -308,9 +389,6 @@ const updateAnimation = () => {
 
 const updatePet = () => {
     if (!pet.alive) return;
-    for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = petSpecies[pet.species];
-    }
     updateAnimation();
 };
 
@@ -341,7 +419,7 @@ const startDeathAnimation = () => {
     animInterval = null;
 
     for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
+        petSprite[i].style.backgroundImage = newPetSprite; // fix death sprite sheet
     }
         
     runner(deathFrames.length);
@@ -607,6 +685,14 @@ const petAnim = () => {
     }, 750);
 }
 
+const updateSprite = () => {
+    for (let i = 0; i < petSprite.length; i++) {
+        petSprite[i].style.backgroundImage = `url("${newPetSprite}")`;
+        console.log(petSprite)
+        console.log(newPetSprite)
+    }
+}
+
 function runner(repeats) {
     if (repeats > 0) {
         playDeathAnim();
@@ -725,18 +811,12 @@ const selectNextPet = () => {
 };
 
 const petChoices = [
-    { species: 'cat', name: 'Mametchi', available: true },
-    { species: 'dog', name: 'TBD', available: false },
-    { species: 'bunny', name: 'TBD', available: false }
+    { species: 'Egg1', name: 'Babytchi', available: true, sprite: petSpecies.Eggs.Egg1.sprite },
+    { species: 'egg2', name: 'Shirobabytchi', available: true, sprite: petSpecies.Eggs.Egg2.sprite }
 ];
 
 const createSelectedPet = () => {
     const choice = petChoices[selectedPet - 1];
-
-    if (!choice.available) {
-        logEntry(`That pet has not been implemented yet.`);
-        return;
-    }
 
     pet = newPet();
     pet.species = choice.species;
@@ -745,10 +825,14 @@ const createSelectedPet = () => {
     pet.pose = 1;
 
     deathFrame = undefined;
+
+    newPetSprite = choice.sprite
+
     petAnim();
     updatePet();
     togglePetSelect();
     updateUI();
+    updateSprite();
 
     logEntry(`New pet selected, ${pet.name} (${pet.species})`);
 };
@@ -922,8 +1006,6 @@ const renderGameSelection = () => {
     gameCards.forEach((card, index) => {
         card.classList.toggle('active', index === selectedGame);
     });
-
-    // gameMessage.textContent = `${gameNames[selectedGame]} selected — press the center button to open it.`;
 };
 
 const selectPreviousGame = () => {
