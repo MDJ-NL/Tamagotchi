@@ -150,10 +150,6 @@ const preparePanelForDrag = (panel) => {
 restorePanelPosition(optionsPanel, 'optionsX', 'optionsY');
 restorePanelPosition(logWindow, 'eventLogX', 'eventLogY');
 
-const test = () => {
-    console.log('tested');
-}
-
 // egg shellcolor
 const eggshell = document.getElementById('st1');
 
@@ -273,6 +269,7 @@ const petSpecies = {
         }
     }
 }
+
 // default fallback
 let newPetSprite = petSpecies.Adults.Mametchi.sprite;
 
@@ -559,7 +556,7 @@ const updateTime = () => {
     clockDisplay.innerText = `${clock} ${ToD}`;
 
     // debug time log
-    console.log(`It's ${ToD} - Time:${clock} - ${currentMinute}`);
+    // console.log(`It's ${ToD} - Time:${clock} - ${currentMinute}`);
 }
 
 const togglePetSelect = () => {
@@ -688,8 +685,6 @@ const petAnim = () => {
 const updateSprite = () => {
     for (let i = 0; i < petSprite.length; i++) {
         petSprite[i].style.backgroundImage = `url("${newPetSprite}")`;
-        console.log(petSprite)
-        console.log(newPetSprite)
     }
 }
 
