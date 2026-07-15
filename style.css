@@ -618,8 +618,8 @@ body{
     }
 
     .buttonWrapper {
-        left: 360px;
         position: inherit;
+        width: 70vmin;
     }
 
     #eventLog {
@@ -795,8 +795,29 @@ body{
                         margin: -0.6vmin 0 0 -2.6vmin;
                     }
                 }   
-            }   
+            }  
+            
+            .buttonWrapper {
+                position: inherit;
+                width: 90vmin;
+                top: 50vmin;
+            }
+
+            #eventLog {
+                width: 85vmin;
+                height: 21vmin;
+                top: 5vmin;
+                right: 4vmin;
+            }
+
+            #options{
+                position: absolute;
+                top: 25vmin;
+            }
+
         }
+
+
     }
 }
 

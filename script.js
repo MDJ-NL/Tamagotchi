@@ -120,7 +120,11 @@ let dragOffsetY = 0;
 let logDragOffsetX = 0;
 let logDragOffsetY = 0;
 
+const isMobileView = () => window.matchMedia('(max-width: 500px)').matches;
+
 const restorePanelPosition = (panel, storageKeyX, storageKeyY) => {
+    if (isMobileView()) return;
+
     const savedX = localStorage.getItem(storageKeyX);
     const savedY = localStorage.getItem(storageKeyY);
 
@@ -1600,6 +1604,8 @@ document.addEventListener('keydown', handleKeyboardControls);
 
 // options panel drag logic
 optionsPanel.addEventListener('mousedown', (event) => {
+    if (isMobileView()) return;
+
     event.preventDefault();
 
     // prevent drag on color buttons
@@ -1620,6 +1626,8 @@ optionsPanel.addEventListener('mousedown', (event) => {
 
 // event log drag logic
 logWindow.addEventListener('mousedown', (event) => {
+    if (isMobileView()) return;
+
     event.preventDefault();
 
     const rect = preparePanelForDrag(logWindow);
