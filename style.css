@@ -517,13 +517,15 @@ body{
             }
 
             #eventLog {
-                width: 90vmin;
+                width: 85vmin;
                 height: 21vmin;
+                top: 5vmin;
+                right: 4vmin;
             }
 
             #options{
                 position: absolute;
-                top: 40vmin;
+                top: 25vmin;
             }
 
         }

@@ -62,7 +62,11 @@ let dragOffsetY = 0;
 let logDragOffsetX = 0;
 let logDragOffsetY = 0;
 
+const isMobileView = () => window.matchMedia('(max-width: 500px)').matches;
+
 const restorePanelPosition = (panel, storageKeyX, storageKeyY) => {
+    if (isMobileView()) return;
+
     const savedX = localStorage.getItem(storageKeyX);
     const savedY = localStorage.getItem(storageKeyY);
 
@@ -74,8 +78,6 @@ const restorePanelPosition = (panel, storageKeyX, storageKeyY) => {
         panel.style.bottom = 'auto';
     }
 };
-
-const isMobileView = () => window.matchMedia('(max-width: 500px)').matches;
 
 const preparePanelForDrag = (panel) => {
     const rect = panel.getBoundingClientRect();
