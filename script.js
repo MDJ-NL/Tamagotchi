@@ -51,7 +51,6 @@ const mainBG = document.getElementById('homeSection');
 
 // pet select menu arrows
 const leftArrow = document.getElementById('leftArrow');
-const centerArrow = document.getElementById('centerArrow');
 const rightArrow = document.getElementById('rightArrow');
 
 // mini-game display
@@ -145,6 +144,8 @@ const preparePanelForDrag = (panel) => {
 
     return rect;
 };
+
+// if windowi so ut of view
 
 restorePanelPosition(optionsPanel, 'optionsX', 'optionsY');
 restorePanelPosition(logWindow, 'eventLogX', 'eventLogY');
@@ -633,6 +634,7 @@ function logEntry(entry) {
     }
 
     localStorage.setItem('eventLog', logWindow.innerHTML);
+    logWindow.scrollTo(0, logWindow.scrollHeight);
 }
 
 // Options menu
@@ -709,17 +711,16 @@ const checkSelection = () => {
 
 const renderPetSelection = () => {
     leftArrow.classList.toggle('hidden', selectedPet !== 1);
-    centerArrow.classList.toggle('hidden', selectedPet !== 2);
-    rightArrow.classList.toggle('hidden', selectedPet !== 3);
+    rightArrow.classList.toggle('hidden', selectedPet !== 2);
 };
 
 const selectPreviousPet = () => {
-    selectedPet = selectedPet === 1 ? 3 : selectedPet - 1;
+    selectedPet = selectedPet === 1 ? 2 : selectedPet - 1;
     renderPetSelection();
 };
 
 const selectNextPet = () => {
-    selectedPet = selectedPet === 3 ? 1 : selectedPet + 1;
+    selectedPet = selectedPet === 2 ? 1 : selectedPet + 1;
     renderPetSelection();
 };
 
@@ -1266,6 +1267,7 @@ const updateScreenLabel = () => {
 };
 
 const selectPreviousMenu = () => {
+    if (pet.alive == false) return;
     selectedMenuIndex =
         selectedMenuIndex === 0
             ? menuScreens.length - 1
@@ -1275,6 +1277,7 @@ const selectPreviousMenu = () => {
 };
 
 const selectNextMenu = () => {
+    if (pet.alive == false) return;
     selectedMenuIndex =
         selectedMenuIndex === menuScreens.length - 1
             ? 0
