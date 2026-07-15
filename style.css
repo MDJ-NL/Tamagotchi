@@ -147,11 +147,17 @@ body{
                     display: flex;
                     flex-direction: row;
                     justify-content: space-between;
+                    align-items: center;
                     text-align: center;
                     width: 100%;
                     height: 5vmin;
-                    padding: 0 10px;
+                    padding: 0 1vmin;
                     border-top: solid 1px #000;
+
+                    p {
+                        margin: 0;
+                        font-size: clamp(8px, 1vmin, 13px);
+                    }
                 }
 
                 .generalMoodWrapper {
@@ -714,95 +720,10 @@ body{
         
 }
 
-@media (max-width: 500px) {
-    body{
-        background-image: none;
-
-        background-image: url(assets/tamagotchi-background-mobile.svg);
-        #tamagotchiBackground{
-            width: 90vmin;
-            height: 200vmin;  
-            
-            
-            #tamagotchiHolder{
-                width: 90vmin;
-                height: 250vmin;
-                top: -5vmin;
-            }
-            
-            #egg-shape-background{
-                top: 50vmin;
-                left: 4vmin;
-                width: 80vmin;
-            }
-        
-            #breaking-egg-shape-background{
-                top: 64vmin;
-                left: 13vmin;
-                width: 62vmin;
-            
-                #tamagotchiScreen{
-                    top: -2vmin;
-                    width: 60vmin;
-                    
-                    #MainMenu{
-
-                        .mainMenuWrapper{
-                            display: flex;
-                        }
-
-                        #newPetMenu {
-                            .petSelect {
-                                width: 100%;
-                                
-                                .option {
-                                    margin: 0 7%;
-                                }                                
-                            }
-                        }
-                    }
-
-                    #gameSection{
-                        p {
-                            margin: 3vmin 0;
-                        }
-                        
-
-                        #homeSection{
-                            
-                            
-                            #bubbleWrapper{
-                                .alertBubble {
-                                    font-size: 2.5vmin;
-                                }
-                            }
-                        }
-                    }
-                }
-            
-                #MaingameButtonsSection{
-                    top: 65vmin;
-
-                    #MainleftButton,
-                    #MainselectButton,
-                    #MainrightButton{
-                        width: 8vmin;
-                        height: 8vmin;
-                    }
-
-                    i {
-                        font-size: 8vmin;
-                        margin: -0.6vmin 0 0 -2.6vmin;
-                    }
-                }   
-            }   
-        }
-    }
-}
 
 
 /* =============================
-   Block Drop mini-game
+Block Drop mini-game
 ============================= */
 #game1Screen .game1Placeholder {
     position: relative;
@@ -990,11 +911,118 @@ body{
     right: -0.5vmin;
 }
 
-
-/* =======
-Mobile
-======= */
 @media (max-width: 500px) {
+    body{
+        background-image: none;
+
+        background-image: url(assets/tamagotchi-background-mobile.svg);
+        #tamagotchiBackground{
+            width: 90vmin;
+            height: 200vmin;  
+            
+            
+            #tamagotchiHolder{
+                width: 90vmin;
+                height: 250vmin;
+                top: -5vmin;
+            }
+            
+            #egg-shape-background{
+                top: 50vmin;
+                left: 4vmin;
+                width: 80vmin;
+            }
+        
+            #breaking-egg-shape-background{
+                top: 64vmin;
+                left: 13vmin;
+                width: 62vmin;
+            
+                #tamagotchiScreen{
+                    top: -2vmin;
+                    width: 60vmin;
+                    
+                    #MainMenu{
+
+                        .mainMenuWrapper{
+                            display: flex;
+                        }
+
+                        #newPetMenu {
+                            .petSelect {
+                                width: 100%;
+                                
+                                .option {
+                                    margin: 0 7%;
+                                }                                
+                            }
+                        }
+                    }
+
+                    #gameSection{
+                        p {
+                            margin: 3vmin 0;
+                        }
+                        
+
+                        #homeSection{
+                            
+                            
+                            #bubbleWrapper{
+                                .alertBubble {
+                                    font-size: 2.5vmin;
+                                }
+                            }
+                        }
+                    }
+                }
+            
+                #MaingameButtonsSection{
+                    top: 65vmin;
+
+                    #MainleftButton,
+                    #MainselectButton,
+                    #MainrightButton{
+                        width: 8vmin;
+                        height: 8vmin;
+                    }
+
+                    i {
+                        font-size: 8vmin;
+                        margin: -0.6vmin 0 0 -2.6vmin;
+                    }
+                }
+            }
+
+            .buttonWrapper {
+                left: 0;
+                width: 100%;
+                display: flex;
+                justify-content: start;
+                gap: 4vmin;
+                top: 51vmin;
+            }
+
+            #eventLog {
+                box-sizing: border-box;
+                right: 2vmin;
+                max-width: 80vmin;
+                height: 25vmin;
+                top: 21vmin;
+
+                .logEntry{
+                    box-sizing: border-box;
+                    height: 100%;
+                }
+            }
+
+            #options {
+                left: 2vmin;
+                max-width: 80vmin;
+            }
+        }
+    }
+
     #game1Container {
         height: 34vmin;
         min-height: 170px;
@@ -1014,3 +1042,4 @@ Mobile
         width: clamp(15px, 3.5vmin, 25px);
     }
 }
+
