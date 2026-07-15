@@ -204,7 +204,7 @@ body{
                 .petSprite {
                     width: 100%;
                     height: 100%;
-                    background-image: url("./assets/pet one sprites verbeterd (2 breed).png");
+                    background-image: url("./assets/new sprites/adults/Adults - Mametchi (1).png");
                     background-repeat: no-repeat;
                 }
 
@@ -345,26 +345,23 @@ body{
                         display: flex;
                         justify-content: space-around;
 
+                        .previewSprite{
+                            height: 10vmin;
+                            width: 9vmin;
+                        }
+
                         .previewEgg1 {
-                            background: url("./assets/pet one sprites verbeterd (2 breed).png");
-
-                            height: 8vmin;
-                            width: 8vmin;
-
+                            background: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Babytchi.webp");
                             background-repeat: no-repeat;
                             background-size: 300%;
-                            background-position: -1.6vmin -1.8vmin;
+                            background-position: -2.1vmin -4vmin;
                         }
 
                         .previewEgg2 {
-                            background: url("./assets/pet one sprites verbeterd (2 breed).png");
-
-                            height: 8vmin;
-                            width: 8vmin;
-
+                            background: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Shirobabytchi.webp");
                             background-repeat: no-repeat;
                             background-size: 300%;
-                            background-position: -1.6vmin -1.8vmin;
+                            background-position: -2.1vmin -4vmin;
                         }
                     }
 
@@ -423,8 +420,8 @@ body{
                         #petSprite{
                             width: 100%;
                             height: 100%;
-
-                            background-image: url("./assets/pet one sprites verbeterd (2 breed).png");
+                        /* temporary sprite */
+                            background-image: url("./assets/new sprites/upscaled/adults/Adult_Mametchi.webp");
                             background-repeat: no-repeat;
                         }
                     }
@@ -957,19 +954,19 @@ body{
 }
 
 .game1FallingBlock.blockPink {
-    background-color: #f07a9d;
+    background-color: var(--red2);
 }
 
 .game1FallingBlock.blockBlue {
-    background-color: #5fa8ff;
+    background-color: var(--blue);
 }
 
 .game1FallingBlock.blockYellow {
-    background-color: #f7d154;
+    background-color: var(--yellow);
 }
 
 .game1FallingBlock.blockGreen {
-    background-color: #6fd48a;
+    background-color: var(--green);
 }
 
 .game1FallingBlock.caught {
