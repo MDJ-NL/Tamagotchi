@@ -610,7 +610,7 @@ body{
         position: inherit;
     }
 
-     #eventLog {
+    #eventLog {
         position: fixed;
         right: 20px;
         top: 90px;
@@ -630,6 +630,7 @@ body{
 
             .timestamp {
                 text-align: end;
+                font-size: small;
             }
         }
     }

@@ -223,7 +223,7 @@ let animInterval = null;
 let deathFrame;
 
 /* =========================
-    Sprite logic only
+    Sprite logic
 ========================= */
 
 const liveSpriteConfig = {
@@ -343,10 +343,13 @@ const startDeathAnimation = () => {
         petSprite[i].style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
     }
         
-    logEntry(`${pet.name} has died...`);
-    setScreen('home');
-    togglePetSelect();
     runner(deathFrames.length);
+    
+    setTimeout(() => {
+        logEntry(`${pet.name} has died...`);
+        togglePetSelect();
+        setScreen('home');
+    }, 10000);
 };
 
 window.addEventListener('resize', () => {
@@ -622,7 +625,7 @@ logBtn.addEventListener('click', toggleLog);
 function logEntry(entry) {
     const newDiv = document.createElement('div');
     newDiv.classList.add('logEntry');
-    newDiv.innerHTML = `<p>${entry}</p> <p class="timestamp">${clock}</p>`;
+    newDiv.innerHTML = `<p>${entry}</p> <p class="timestamp">${currentTime()}</p>`;
     logWindow.appendChild(newDiv);
 
     if (logWindow.children.length > 10) {
@@ -680,6 +683,10 @@ function resetColors() {
     localStorage.setItem('innerColor', '#335ca7');
 }
 
+const currentTime = () => {
+    return new Date().toLocaleString();
+}
+
 /* ======================
     core UI functions
 ====================== */
@@ -726,7 +733,7 @@ const createSelectedPet = () => {
     const choice = petChoices[selectedPet - 1];
 
     if (!choice.available) {
-        logEntry('That pet has not been implemented yet.');
+        logEntry(`That pet has not been implemented yet.`);
         return;
     }
 
@@ -1037,9 +1044,11 @@ const miniGameButtonActions = {
     }
 };
 
-/* =======================
+/* ==========================
     minigame functionality
-======================= */
+========================== */
+
+//game 1 (falling blocks)
 const GAME1_MAX_MISSES = 3;
 const GAME1_LANE_COUNT = 3;
 const GAME1_BLOCK_STYLES = ['blockPink', 'blockBlue', 'blockYellow', 'blockGreen'];
@@ -1171,6 +1180,7 @@ function endGame1() {
     game1GameOver.classList.remove('noDisplay');
     updateGame1Hud();
     logEntry(`Block Drop ended with a score of ${game1CurrentScore}.`);
+    game1ScoreCheck();
 }
 
 function game1Loop(timestamp) {
@@ -1220,6 +1230,24 @@ function game1Loop(timestamp) {
 
     game1AnimationFrame = requestAnimationFrame(game1Loop);
 }
+
+function game1ScoreCheck() {
+    if (game1CurrentScore >= 70) {
+        console.log(`70+`);
+    } else if (game1CurrentScore >= 50) {
+        console.log(`50+`);
+    } else if (game1CurrentScore >= 10) {
+        console.log(`10+`);
+    } else {
+        console.log(`get good`)
+    }
+}
+
+// game 2
+
+
+// game 3
+
 
 /* =============================
     screen and button system
