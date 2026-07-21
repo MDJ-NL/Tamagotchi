@@ -98,9 +98,10 @@ const hungryBubble = document.getElementById('hungry');
 const tiredBubble = document.getElementById('tired');
 const dirtyBubble = document.getElementById('dirty');
 
-// pet div
+// pet sprites
 const petWrapper = document.getElementsByClassName('petWrapper');
 const petSprite = document.getElementsByClassName('petSprite');
+const previewSprite = document.getElementsByClassName('previewSprite');
 
 // logs
 const clockDisplay = document.getElementById('clock');
@@ -274,6 +275,25 @@ const petSpecies = {
     }
 }
 
+const findPetSprite = (species) => {
+    if (!species) return null;
+
+    const wantedSpecies = String(species).toLowerCase();
+
+    for (const group of Object.values(petSpecies)) {
+        for (const [speciesKey, speciesData] of Object.entries(group)) {
+            const matchesKey = speciesKey.toLowerCase() === wantedSpecies;
+            const matchesName = speciesData.name.toLowerCase() === wantedSpecies;
+
+            if (matchesKey || matchesName) {
+                return speciesData.sprite;
+            }
+        }
+    }
+
+    return null;
+};
+
 // default fallback
 let newPetSprite = petSpecies.Adults.Mametchi.sprite;
 
@@ -309,25 +329,66 @@ let deathFrame;
     Sprite logic
 ========================= */
 
-const liveSpriteConfig = {
-    columns: 2,
-    rows: 6,
-    zoom: 1.12
+// Normal target size is 90-135px. On a very small screen the wrapper is
+// allowed to shrink below 90px so it never spills outside the Tamagotchi LCD.
+const spriteSizeConfig = {
+    min: 90,
+    max: 135,
+    viewportScale: 0.12
 };
 
-const deathSpriteConfig = {
+const standardLiveSpriteConfig = {
     columns: 2,
     rows: 6,
-    zoom: 1.12
+    zoom: 1.12,
+    animationRows: {
+        idle: 0,
+        happy: 1,
+        unhappy: 2,
+        eating: 3,
+        bathing: 4,
+        sleeping: 5
+    }
 };
 
-const animationRows = {
-    idle: 0,
-    happy: 1,
-    unhappy: 2,
-    eating: 3,
-    bathing: 4,
-    sleeping: 5
+// Hashitamatchi is the one differently arranged sheet: 2 columns x 5 rows.
+// The original image remains untouched. Its last row is sleeping, and because
+// it has no separate bathing row, bathing falls back to the idle row.
+const hashitamatchiSpriteConfig = {
+    columns: 2,
+    rows: 5,
+    zoom: 1.12,
+    animationRows: {
+        idle: 0,
+        happy: 1,
+        unhappy: 2,
+        eating: 3,
+        bathing: 0,
+        sleeping: 4
+    }
+};
+
+const isHashitamatchiSheet = () => {
+    return String(newPetSprite)
+        .replaceAll('\\', '/')
+        .toLowerCase()
+        .endsWith('/teen_hashitamatchi.webp');
+};
+
+const getLiveSpriteConfig = () => {
+    return isHashitamatchiSheet()
+        ? hashitamatchiSpriteConfig
+        : standardLiveSpriteConfig;
+};
+
+const getDeathSpriteConfig = () => {
+    const liveConfig = getLiveSpriteConfig();
+
+    return {
+        columns: liveConfig.columns,
+        rows: liveConfig.rows,
+        zoom: liveConfig.zoom
+    };
 };
 
 const deathFrames = [
@@ -346,46 +407,151 @@ const deathFrames = [
     [1, 2]  // frame 6
 ];
 
-const setPetWrapperSize = () => {
-    for (let i = 0; i < petWrapper.length; i++) {
-        const wrapper = petWrapper[i];
-        wrapper.style.width = 'clamp(100px, 12vmin, 135px)';
-        wrapper.style.height = 'clamp(100px, 12vmin, 135px)';
+const clampNumber = (value, min, max) => {
+    return Math.min(max, Math.max(min, value));
+};
+
+const getBoxSpacing = (style, sideA, sideB) => {
+    const firstValue = Number.parseFloat(style[sideA]) || 0;
+    const secondValue = Number.parseFloat(style[sideB]) || 0;
+
+    return firstValue + secondValue;
+};
+
+const getOuterHeight = (element) => {
+    const style = getComputedStyle(element);
+
+    if (style.display === 'none' || style.position === 'absolute' || style.position === 'fixed') {
+        return 0;
     }
+
+    return element.getBoundingClientRect().height +
+        getBoxSpacing(style, 'marginTop', 'marginBottom');
+};
+
+const getAvailableSquareSize = (wrapper) => {
+    const parent = wrapper.parentElement;
+
+    if (!parent || parent.clientWidth === 0 || parent.clientHeight === 0) {
+        return 0;
+    }
+
+    const parentStyle = getComputedStyle(parent);
+    const wrapperStyle = getComputedStyle(wrapper);
+
+    const parentContentWidth = parent.clientWidth -
+        getBoxSpacing(parentStyle, 'paddingLeft', 'paddingRight');
+
+    const parentContentHeight = parent.clientHeight -
+        getBoxSpacing(parentStyle, 'paddingTop', 'paddingBottom');
+
+    const wrapperHorizontalSpace = getBoxSpacing(
+        wrapperStyle,
+        'marginLeft',
+        'marginRight'
+    );
+
+    const wrapperVerticalSpace = getBoxSpacing(
+        wrapperStyle,
+        'marginTop',
+        'marginBottom'
+    );
+
+    let siblingHeight = 0;
+
+    for (const sibling of parent.children) {
+        if (sibling !== wrapper) {
+            siblingHeight += getOuterHeight(sibling);
+        }
+    }
+
+    const availableWidth = parentContentWidth - wrapperHorizontalSpace;
+    const availableHeight = parentContentHeight - siblingHeight - wrapperVerticalSpace;
+
+    return Math.floor(Math.max(0, Math.min(availableWidth, availableHeight)));
+};
+
+const setPetWrapperSize = () => {
+    const fluidSize =
+        Math.min(window.innerWidth, window.innerHeight) *
+        spriteSizeConfig.viewportScale;
+
+    const preferredSize = clampNumber(
+        fluidSize,
+        spriteSizeConfig.min,
+        spriteSizeConfig.max
+    );
+
+    const visibleWrappers = Array.from(petWrapper).filter((wrapper) => {
+        return wrapper.offsetParent !== null;
+    });
+
+    visibleWrappers.forEach((wrapper) => {
+        wrapper.style.width = `${preferredSize}px`;
+        wrapper.style.height = `${preferredSize}px`;
+    });
+
+    // Force recalculation of layout before measuring.
+    void document.documentElement.offsetHeight;
+
+    visibleWrappers.forEach((wrapper) => {
+        const availableSize = getAvailableSquareSize(wrapper);
+
+        if (availableSize <= 0) return;
+
+        const finalSize = Math.max(
+            1,
+            Math.min(preferredSize, availableSize)
+        );
+
+        wrapper.style.width = `${finalSize}px`;
+        wrapper.style.height = `${finalSize}px`;
+    });
+};
+
+const renderSpriteFrame = (sprite, column, row, config) => {
+    const frameWidth = sprite.clientWidth;
+    const frameHeight = sprite.clientHeight;
+
+    if (frameWidth <= 0 || frameHeight <= 0) return;
+
+    const scaledFrameWidth = frameWidth * config.zoom;
+    const scaledFrameHeight = frameHeight * config.zoom;
+    const cropOffsetX = (scaledFrameWidth - frameWidth) / 2;
+    const cropOffsetY = (scaledFrameHeight - frameHeight) / 2;
+
+    sprite.style.backgroundRepeat = 'no-repeat';
+    sprite.style.backgroundSize =
+        `${config.columns * scaledFrameWidth}px ${config.rows * scaledFrameHeight}px`;
+
+    const x = -(column * scaledFrameWidth + cropOffsetX);
+    const y = -(row * scaledFrameHeight + cropOffsetY);
+
+    sprite.style.backgroundPosition = `${x}px ${y}px`;
 };
 
 const setSpriteFrame = (column, row, config) => {
     setPetWrapperSize();
 
     for (let i = 0; i < petSprite.length; i++) {
-        const sprite = petSprite[i];
-        const wrapper = petWrapper[i] || sprite.parentElement;
+        renderSpriteFrame(petSprite[i], column, row, config);
+    }
+};
 
-        const frameSize = wrapper.offsetWidth;
-        const scaledFrame = frameSize * config.zoom;
-        const cropOffset = (scaledFrame - frameSize) / 2;
-
-        sprite.style.width = '100%';
-        sprite.style.height = '100%';
-        sprite.style.backgroundRepeat = 'no-repeat';
-
-        sprite.style.backgroundSize =
-            `${config.columns * config.zoom * 100}% ${config.rows * config.zoom * 100}%`;
-
-        const x = -(column * scaledFrame + cropOffset);
-        const y = -(row * scaledFrame + cropOffset);
-
-        sprite.style.backgroundPosition = `${x}px ${y}px`;
+const renderPreviewSprites = () => {
+    for (let i = 0; i < previewSprite.length; i++) {
+        renderSpriteFrame(previewSprite[i], 0, 0, standardLiveSpriteConfig);
     }
 };
 
 const updateAnimation = () => {
     if (!pet.alive) return;
 
-    const row = animationRows[pet.anim] ?? animationRows.idle;
+    const config = getLiveSpriteConfig();
+    const row = config.animationRows[pet.anim] ?? config.animationRows.idle;
     const column = pet.pose === 2 ? 1 : 0;
 
-    setSpriteFrame(column, row, liveSpriteConfig);
+    setSpriteFrame(column, row, config);
 };
 
 const updatePet = () => {
@@ -399,7 +565,7 @@ const renderDeathFrame = () => {
     const column = frame[0];
     const row = frame[1];
 
-    setSpriteFrame(column, row, deathSpriteConfig);
+    setSpriteFrame(column, row, getDeathSpriteConfig());
 };
 
 const playDeathAnim = () => {
@@ -419,12 +585,11 @@ const startDeathAnimation = () => {
     clearInterval(animInterval);
     animInterval = null;
 
-    for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = newPetSprite; // fix death sprite sheet
-    }
-        
+    // Keep valid CSS url(...) syntax when changing/reapplying the sheet.
+    updateSprite();
+
     runner(deathFrames.length);
-    
+
     setTimeout(() => {
         logEntry(`${pet.name} has died...`);
         togglePetSelect();
@@ -432,14 +597,26 @@ const startDeathAnimation = () => {
     }, 10000);
 };
 
-window.addEventListener('resize', () => {
+let spriteResizeFrame = null;
+
+const refreshSpriteLayout = () => {
+    spriteResizeFrame = null;
     setPetWrapperSize();
+    renderPreviewSprites();
 
     if (pet.alive) {
         updateAnimation();
     } else if (deathFrame !== undefined) {
         renderDeathFrame();
     }
+};
+
+window.addEventListener('resize', () => {
+    if (spriteResizeFrame !== null) {
+        cancelAnimationFrame(spriteResizeFrame);
+    }
+
+    spriteResizeFrame = requestAnimationFrame(refreshSpriteLayout);
 });
 
 /* ===============
@@ -485,6 +662,12 @@ const loadFromLocalstorage = () => {
         console.error('Bad petState in localStorage:', petState);
         localStorage.removeItem('petState');
         return;
+    }
+
+    const restoredSprite = findPetSprite(pet.species);
+    if (restoredSprite) {
+        newPetSprite = restoredSprite;
+        updateSprite();
     }
 
     catchUpGameState();
@@ -686,11 +869,15 @@ const petAnim = () => {
     }, 750);
 }
 
+const toCssUrl = (path) => {
+    return `url("${String(path).replaceAll('"', '\"')}")`;
+};
+
 const updateSprite = () => {
     for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = `url("${newPetSprite}")`;
+        petSprite[i].style.backgroundImage = toCssUrl(newPetSprite);
     }
-}
+};
 
 function runner(repeats) {
     if (repeats > 0) {
@@ -811,7 +998,7 @@ const selectNextPet = () => {
 
 const petChoices = [
     { species: 'Egg1', name: 'Babytchi', available: true, sprite: petSpecies.Eggs.Egg1.sprite },
-    { species: 'egg2', name: 'Shirobabytchi', available: true, sprite: petSpecies.Eggs.Egg2.sprite }
+    { species: 'Egg2', name: 'Shirobabytchi', available: true, sprite: petSpecies.Eggs.Egg2.sprite }
 ];
 
 const createSelectedPet = () => {
@@ -825,13 +1012,13 @@ const createSelectedPet = () => {
 
     deathFrame = undefined;
 
-    newPetSprite = choice.sprite
+    newPetSprite = choice.sprite;
+    updateSprite();
 
     petAnim();
-    updatePet();
     togglePetSelect();
     updateUI();
-    updateSprite();
+    updatePet();
 
     logEntry(`New pet selected, ${pet.name} (${pet.species})`);
 };
@@ -1768,6 +1955,7 @@ document.addEventListener('mouseup', () => {
 const init = () => {
     tick = 0;
     setPetWrapperSize();
+    renderPreviewSprites();
     loadFromLocalstorage();
     logWindow.innerHTML = localStorage.getItem('eventLog') || '';
     prepareGame1Menu();

@@ -195,6 +195,12 @@ body{
                 #homeSection .petWrapper {
                     width: clamp(90px, 12vmin, 135px);
                     height: clamp(90px, 12vmin, 135px);
+                    max-width: 100%;
+                    max-height: 100%;
+                    min-width: 0;
+                    min-height: 0;
+                    flex-shrink: 1;
+                    aspect-ratio: 1 / 1;
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -204,8 +210,10 @@ body{
                 .petSprite {
                     width: 100%;
                     height: 100%;
-                    background-image: url("./assets/new sprites/adults/Adults - Mametchi (1).png");
+                    background-image: url("./assets/new sprites/upscaled/adults/Adult_Mametchi.webp");
                     background-repeat: no-repeat;
+                    background-position: 0 0;
+                    image-rendering: pixelated;
                 }
 
                 .mainMenuWrapper{
@@ -344,24 +352,26 @@ body{
                     .petImages {
                         display: flex;
                         justify-content: space-around;
+                        align-items: center;
+                        gap: 1vmin;
 
                         .previewSprite{
-                            height: 10vmin;
-                            width: 9vmin;
+                            width: clamp(48px, 9vmin, 90px);
+                            max-width: 42%;
+                            height: auto;
+                            aspect-ratio: 1 / 1;
+                            flex: 0 1 auto;
+                            background-repeat: no-repeat;
+                            background-position: 0 0;
+                            image-rendering: pixelated;
                         }
 
                         .previewEgg1 {
-                            background: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Babytchi.webp");
-                            background-repeat: no-repeat;
-                            background-size: 300%;
-                            background-position: -2.1vmin -4vmin;
+                            background-image: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Babytchi.webp");
                         }
 
                         .previewEgg2 {
-                            background: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Shirobabytchi.webp");
-                            background-repeat: no-repeat;
-                            background-size: 300%;
-                            background-position: -2.1vmin -4vmin;
+                            background-image: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Shirobabytchi.webp");
                         }
                     }
 
@@ -408,22 +418,6 @@ body{
 
                     .petWrapper{
                         margin: 0 auto;
-
-                        width: clamp(90px, 12vmin, 130px);
-                        height: clamp(90px, 12vmin, 130px);
-
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        overflow: hidden;
-
-                        #petSprite{
-                            width: 100%;
-                            height: 100%;
-                        /* temporary sprite */
-                            background-image: url("./assets/new sprites/upscaled/adults/Adult_Mametchi.webp");
-                            background-repeat: no-repeat;
-                        }
                     }
 
                     #logBar {
