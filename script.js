@@ -482,8 +482,16 @@ const renderSpriteFrame = (sprite, column, row, config) => {
     sprite.style.backgroundSize =
         `${config.columns * scaledFrameWidth}px ${config.rows * scaledFrameHeight}px`;
 
-    const x = -(column * scaledFrameWidth + cropOffsetX);
-    const y = -(row * scaledFrameHeight + cropOffsetY);
+    const spriteOffsetX = 0;
+    const spriteOffsetY = 65;
+
+    const x =
+        -(column * scaledFrameWidth + cropOffsetX) +
+        spriteOffsetX;
+
+    const y =
+        -(row * scaledFrameHeight + cropOffsetY) +
+        spriteOffsetY;
 
     sprite.style.backgroundPosition = `${x}px ${y}px`;
 };
