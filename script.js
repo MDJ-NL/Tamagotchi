@@ -325,8 +325,6 @@ let deathFrame;
     Sprite logic
 ========================= */
 
-// Normal target size is 90-135px. On a very small screen the wrapper is
-// allowed to shrink below 90px so it never spills outside the Tamagotchi LCD.
 const spriteSizeConfig = {
     min: 90,
     max: 135,
@@ -345,46 +343,6 @@ const standardLiveSpriteConfig = {
         bathing: 4,
         sleeping: 5
     }
-};
-
-// Hashitamatchi is the one differently arranged sheet: 2 columns x 5 rows.
-// The original image remains untouched. Its last row is sleeping, and because
-// it has no separate bathing row, bathing falls back to the idle row.
-const hashitamatchiSpriteConfig = {
-    columns: 2,
-    rows: 5,
-    zoom: 1.12,
-    animationRows: {
-        idle: 0,
-        happy: 1,
-        unhappy: 2,
-        eating: 3,
-        bathing: 0,
-        sleeping: 4
-    }
-};
-
-const isHashitamatchiSheet = () => {
-    return String(newPetSprite)
-        .replaceAll('\\', '/')
-        .toLowerCase()
-        .endsWith('/teen_hashitamatchi.webp');
-};
-
-const getLiveSpriteConfig = () => {
-    return isHashitamatchiSheet()
-        ? hashitamatchiSpriteConfig
-        : standardLiveSpriteConfig;
-};
-
-const getDeathSpriteConfig = () => {
-    const liveConfig = getLiveSpriteConfig();
-
-    return {
-        columns: liveConfig.columns,
-        rows: liveConfig.rows,
-        zoom: liveConfig.zoom
-    };
 };
 
 const deathFrames = [
@@ -543,8 +501,11 @@ const renderPreviewSprites = () => {
 const updateAnimation = () => {
     if (!pet.alive) return;
 
-    const config = getLiveSpriteConfig();
-    const row = config.animationRows[pet.anim] ?? config.animationRows.idle;
+    const config = standardLiveSpriteConfig;
+    const row =
+        config.animationRows[pet.anim] ??
+        config.animationRows.idle;
+
     const column = pet.pose === 2 ? 1 : 0;
 
     setSpriteFrame(column, row, config);
@@ -561,7 +522,7 @@ const renderDeathFrame = () => {
     const column = frame[0];
     const row = frame[1];
 
-    setSpriteFrame(column, row, getDeathSpriteConfig());
+    setSpriteFrame(column, row, standardLiveSpriteConfig);
 };
 
 const playDeathAnim = () => {
@@ -581,7 +542,6 @@ const startDeathAnimation = () => {
     clearInterval(animInterval);
     animInterval = null;
 
-    // Keep valid CSS url(...) syntax when changing/reapplying the sheet.
     updateSprite();
 
     runner(deathFrames.length);
