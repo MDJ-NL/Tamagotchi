@@ -1005,7 +1005,7 @@ Block Drop mini-game
 
             #eventLog {
                 box-sizing: border-box;
-                right: 2vmin;
+                right: 10vmin;
                 max-width: 80vmin;
                 height: 25vmin;
                 top: 21vmin;
