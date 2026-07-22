@@ -207,6 +207,12 @@ body{
                     overflow: hidden;
                 }
 
+                /* Position sprite with this */
+                .petWrapper {
+                    transform: translate(0, 0px);
+                    /* border: solid 1px #000; */ 
+                }
+ 
                 .petSprite {
                     width: 100%;
                     height: 100%;
