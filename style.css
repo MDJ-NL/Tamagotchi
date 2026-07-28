@@ -312,12 +312,11 @@ body{
                 }
 
                 #newPetMenu {
-                    grid-area: gameSection;
                     position: absolute;
-                    height: 100%;
-                    width: 100%;
+                    inset: 0;
 
-                    justify-self: center;
+                    z-index: 10;
+                    box-sizing: border-box;
 
                     background-color: var(--background-color);
 

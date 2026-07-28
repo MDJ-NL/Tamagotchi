@@ -65,6 +65,9 @@ const miniGameStatus = {
     game3: document.getElementById('game3Status')
 };
 
+// clear local data once
+// localStorage.clear();
+
 /* ============================
     minigame 1 declarations
 ============================ */
@@ -287,23 +290,180 @@ const petSpecies = {
 /* ====================
     Evolution logic
 ==================== */
-// default fallback
-const hour = 3600
-let currentsprite = petSpecies.Adults.Mametchi.sprite;
-let currentSpecies = petSpecies.Adults.Mametchi;
 
-const checkEvolution = () => {
-    //Path A (babytchi)
-    if (currentSpecies === petSpecies.Eggs.Egg1) {
-        if (pet.age >= hour){
-            currentSpecies = petSpecies.Babies.Babytchi
-        }
-    } else if (currentSpecies === petSpecies.Babies.Babytchi) {
-        if (pet.age >= hour * 24) {
-            // something
+const hour = 60 * 60;
+let optionB = false; // decide Pet A or B per evolution.
+
+// Default fallback until an egg is selected or a save is loaded.
+let currentSpecies = null;
+let currentsprite = null;
+
+// Finds the original petSpecies object.
+const getCanonicalSpecies = (species) => {
+    if (!species) return null;
+
+    const wantedSpecies = String(
+        typeof species === 'object'
+            ? species.name
+            : species
+    ).toLowerCase();
+
+    for (const group of Object.values(petSpecies)) {
+        for (const [speciesKey, speciesData] of Object.entries(group)) {
+            const matchesKey =
+                speciesKey.toLowerCase() === wantedSpecies;
+
+            const matchesName =
+                speciesData.name.toLowerCase() === wantedSpecies;
+
+            if (matchesKey || matchesName) {
+                return speciesData;
+            }
         }
     }
-}
+
+    return null;
+};
+
+/*
+    1 hour   = Egg > Baby
+    24 hours = Baby > Child
+    60 hours = Child > Teen
+    120 hours = Teen > Adult
+*/
+const evolutionPaths = new Map([
+    // Eggs > Babies
+    [
+        petSpecies.Eggs.Egg1,
+        {
+            age: hour,
+            optionA: petSpecies.Babies.Babytchi
+        }
+    ],
+    [
+        petSpecies.Eggs.Egg2,
+        {
+            age: hour,
+            optionA: petSpecies.Babies.Shirobabytchi
+        }
+    ],
+
+    // Babies > Children
+    [
+        petSpecies.Babies.Babytchi,
+        {
+            age: hour * 24,
+            optionA: petSpecies.Children.Tonmarutchi
+        }
+    ],
+    [
+        petSpecies.Babies.Shirobabytchi,
+        {
+            age: hour * 24,
+            optionA: petSpecies.Children.Marutchi
+        }
+    ],
+
+    // Children > Teens
+    [
+        petSpecies.Children.Marutchi,
+        {
+            age: hour * 60,
+            optionA: petSpecies.Teens.Hasitamatchi,
+            optionB: petSpecies.Teens.Kuchitamatchi
+        }
+    ],
+    [
+        petSpecies.Children.Tonmarutchi,
+        {
+            age: hour * 60,
+            optionA: petSpecies.Teens.Tongaritchi,
+            optionB: petSpecies.Teens.Tamatchi
+        }
+    ],
+
+    // Teens > Adults
+    [
+        petSpecies.Teens.Tamatchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Mametchi,
+            optionB: petSpecies.Adults.Nyatchi
+        }
+    ],
+    [
+        petSpecies.Teens.Hasitamatchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Ginjirotchi,
+            optionB: petSpecies.Adults.Kusatchi
+        }
+    ],
+    [
+        petSpecies.Teens.Kuchitamatchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Kuchipatchi,
+            optionB: petSpecies.Adults.Nyorotchi
+        }
+    ],
+    [
+        petSpecies.Teens.Tongaritchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Pochitchi,
+            optionB: petSpecies.Adults.Mimitchi
+        }
+    ]
+]);
+
+const evolveTo = (nextSpecies) => {
+    if (!nextSpecies || currentSpecies === nextSpecies) return;
+
+    const previousName = currentSpecies.name;
+
+    currentSpecies = nextSpecies;
+    currentsprite = nextSpecies.sprite;
+
+    pet.species = nextSpecies;
+    pet.name = nextSpecies.name;
+
+    // Change to the new species sprite.
+    updateSprite();
+    updatePet();
+
+    logEntry(`${previousName} evolved into ${nextSpecies.name}!`);
+};
+
+const checkEvolution = () => {
+    if (!pet.alive) return;
+
+    // Reconnect loaded save data to the original petSpecies object
+    const restoredSpecies = getCanonicalSpecies(pet.species);
+
+    if (restoredSpecies && currentSpecies !== restoredSpecies) {
+        currentSpecies = restoredSpecies;
+        currentsprite = restoredSpecies.sprite;
+    }
+
+    // run multiple evolutions in case of long time catch-up
+    let evolutionsThisCheck = 0;
+
+    while (evolutionsThisCheck < 4) {
+        const evolution = evolutionPaths.get(currentSpecies);
+
+        if (!evolution) break;
+        if (pet.age < evolution.age) break;
+
+        const nextSpecies =
+            optionB === true && evolution.optionB
+                ? evolution.optionB
+                : evolution.optionA;
+
+        evolveTo(nextSpecies);
+        evolutionsThisCheck++;
+    }
+};
 
 // ========================== //
 const findPetSprite = (species) => {
@@ -358,6 +518,9 @@ let deathFrame;
 /* =========================
     Sprite logic
 ========================= */
+
+// Set to null for normal behaviour.
+const DEBUG_SPRITE_OVERRIDE = petSpecies.Adults.Mametchi;
 
 const spriteSizeConfig = {
     min: 90,
@@ -497,7 +660,14 @@ const setPetWrapperSize = () => {
     });
 };
 
-const renderSpriteFrame = (sprite, column, row, config) => {
+const renderSpriteFrame = (
+    sprite,
+    column,
+    row,
+    config,
+    spriteOffsetX = 0, // X axis offset for sprite positioning
+    spriteOffsetY = 80 // Y axis
+) => {
     const frameWidth = sprite.clientWidth;
     const frameHeight = sprite.clientHeight;
 
@@ -511,9 +681,6 @@ const renderSpriteFrame = (sprite, column, row, config) => {
     sprite.style.backgroundRepeat = 'no-repeat';
     sprite.style.backgroundSize =
         `${config.columns * scaledFrameWidth}px ${config.rows * scaledFrameHeight}px`;
-
-    const spriteOffsetX = 0;
-    const spriteOffsetY = 65;
 
     const x =
         -(column * scaledFrameWidth + cropOffsetX) +
@@ -536,7 +703,14 @@ const setSpriteFrame = (column, row, config) => {
 
 const renderPreviewSprites = () => {
     for (let i = 0; i < previewSprite.length; i++) {
-        renderSpriteFrame(previewSprite[i], 0, 0, standardLiveSpriteConfig);
+        renderSpriteFrame(
+            previewSprite[i],
+            0,
+            0,
+            standardLiveSpriteConfig,
+            0,  // X axis
+            -20 // Y axis
+        );
     }
 };
 
@@ -639,9 +813,9 @@ window.onbeforeunload = function () {
 }
 
 const loadFromLocalstorage = () => {
-    let petState = localStorage.getItem('petState');
-    let innerColor = localStorage.getItem('innerColor');
-    let frameColor = localStorage.getItem('frameColor');
+    const petState = localStorage.getItem('petState');
+    const innerColor = localStorage.getItem('innerColor');
+    const frameColor = localStorage.getItem('frameColor');
 
     if (frameColor) {
         eggshell.style.fill = frameColor.startsWith('#')
@@ -667,15 +841,27 @@ const loadFromLocalstorage = () => {
         return;
     }
 
-    const restoredSprite = findPetSprite(pet.species);
-    if (restoredSprite) {
-        currentsprite = restoredSprite;
-        updateSprite();
+    // restore the species object from the saved data
+    const restoredSpecies = getCanonicalSpecies(pet.species);
+
+    if (!restoredSpecies) {
+        console.error('Could not restore species:', pet.species);
+        pet.alive = false;
+        return;
     }
 
+    currentSpecies = restoredSpecies;
+    currentsprite = restoredSpecies.sprite;
+
+    pet.species = restoredSpecies;
+    pet.name = restoredSpecies.name;
+
+    updateSprite();
+
     catchUpGameState();
+    checkEvolution();
     updateUI();
-}
+};
 
 const catchUpGameState = () => {
     let savedDate = localStorage.getItem('savedDate');
@@ -692,6 +878,9 @@ const catchUpGameState = () => {
     let catchUpTimeString = `${catchUpHours}h ${catchUpMinutes % 60}m ${catchUpSeconds % 60}s`;
 
     if (catchUpSeconds <= 0) return;
+
+    pet.age += catchUpSeconds;
+    checkEvolution();
 
     pet.hunger -= catchUpSeconds;
     pet.energy -= catchUpSeconds;
@@ -752,8 +941,14 @@ const togglePetSelect = () => {
     if (!pet.alive) {
         activeScreen = 'home';
         selectedMenuIndex = 1;
+
         petMenu.classList.remove('hidden');
         renderPetSelection();
+
+        // delay the preview sprite rendering to ensure the DOM is updated before measuring
+        requestAnimationFrame(() => {
+            renderPreviewSprites();
+        });
     } else {
         petMenu.classList.add('hidden');
     }
@@ -876,8 +1071,15 @@ const toCssUrl = (path) => {
 };
 
 const updateSprite = () => {
+    const spritePath =
+        DEBUG_SPRITE_OVERRIDE?.sprite ??
+        currentsprite;
+
+    if (!spritePath) return;
+
     for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = toCssUrl(currentsprite);
+        petSprite[i].style.backgroundImage =
+            toCssUrl(spritePath);
     }
 };
 
@@ -1956,21 +2158,36 @@ document.addEventListener('mouseup', () => {
 =============== */
 const init = () => {
     tick = 0;
-    setPetWrapperSize();
-    renderPreviewSprites();
+
     loadFromLocalstorage();
-    logWindow.innerHTML = localStorage.getItem('eventLog') || '';
+
+    logWindow.innerHTML =
+        localStorage.getItem('eventLog') || '';
+
     prepareGame1Menu();
 
     setScreen('home');
     togglePetSelect();
+
     updateTime();
     updateUI();
+
+    //delay the initial rendering of the pet wrapper size and sprite update to ensure the DOM is fully loaded
+    requestAnimationFrame(() => {
+        setPetWrapperSize();
+        renderPreviewSprites();
+
+        if (pet.alive) {
+            updateSprite();
+            updatePet();
+        }
+    });
+
     petAnim();
     updateMood();
-    updatePet();
 
     setInterval(gameLoop, 1000);
-    setInterval(saveToLocalStorage, 300000); // 5min periodic save
+    setInterval(saveToLocalStorage, 300000);
 };
+
 init();
