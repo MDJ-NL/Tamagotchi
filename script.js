@@ -65,9 +65,9 @@ const miniGameStatus = {
     game3: document.getElementById('game3Status')
 };
 
-/*========================
- minigame declarations
- ====================== */
+/* ============================
+    minigame 1 declarations
+============================ */
 const game1Window = document.getElementById('game1Container');
 const game1MainMenu = document.getElementById('game1MainMenu');
 const game1Playfield = document.getElementById('game1Playfield');
@@ -79,9 +79,6 @@ const game1GameOver = document.getElementById('game1GameOver');
 const game1FinalScore = document.getElementById('game1FinalScore');
 
 let game1Active = false;
-let game2Active = false;
-let game3Active = false;
-
 let game1CurrentScore = 0;
 let game1HighScore = Number(localStorage.getItem('game1HighScore')) || 0;
 let game1Misses = 0;
@@ -90,7 +87,19 @@ let game1AnimationFrame = null;
 let game1LastFrameTime = 0;
 let game1SpawnTimer = 0;
 let game1FallingBlocks = [];
- 
+
+/* ============================
+    minigame 2 declarations
+============================ */
+
+let game2Active = false;
+
+ /* ===========================
+    minigame 3 declarations
+============================ */
+
+ let game3Active = false;
+
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
 
@@ -150,7 +159,7 @@ const preparePanelForDrag = (panel) => {
     return rect;
 };
 
-// if windowi so ut of view
+// if window is out of view
 
 restorePanelPosition(optionsPanel, 'optionsX', 'optionsY');
 restorePanelPosition(logWindow, 'eventLogX', 'eventLogY');
@@ -275,6 +284,28 @@ const petSpecies = {
     }
 }
 
+/* ====================
+    Evolution logic
+==================== */
+// default fallback
+const hour = 3600
+let currentsprite = petSpecies.Adults.Mametchi.sprite;
+let currentSpecies = petSpecies.Adults.Mametchi;
+
+const checkEvolution = () => {
+    //Path A (babytchi)
+    if (currentSpecies === petSpecies.Eggs.Egg1) {
+        if (pet.age >= hour){
+            currentSpecies = petSpecies.Babies.Babytchi
+        }
+    } else if (currentSpecies === petSpecies.Babies.Babytchi) {
+        if (pet.age >= hour * 24) {
+            // something
+        }
+    }
+}
+
+// ========================== //
 const findPetSprite = (species) => {
     if (!species) return null;
 
@@ -294,9 +325,6 @@ const findPetSprite = (species) => {
     return null;
 };
 
-// default fallback
-let newPetSprite = petSpecies.Adults.Mametchi.sprite;
-
 let pet = {
     hunger:     80,
     energy:     80,
@@ -304,6 +332,7 @@ let pet = {
     hungry:     false,
     tired:      false,
     dirty:      false,
+    sick:       false,
     mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
     age:        0,
     alive:      false,
@@ -312,6 +341,7 @@ let pet = {
     species:    '',
     name:       `unnamed`,
     anim:       'idle'
+    
 }
 
 let tick = 0;
@@ -525,6 +555,11 @@ const updateAnimation = () => {
 
 const updatePet = () => {
     if (!pet.alive) return;
+    pet.name = currentSpecies.name
+    pet.species = currentSpecies;
+    currentsprite = currentSpecies.sprite;
+    
+    findPetSprite(pet.species)
     updateAnimation();
 };
 
@@ -634,7 +669,7 @@ const loadFromLocalstorage = () => {
 
     const restoredSprite = findPetSprite(pet.species);
     if (restoredSprite) {
-        newPetSprite = restoredSprite;
+        currentsprite = restoredSprite;
         updateSprite();
     }
 
@@ -668,7 +703,6 @@ const catchUpGameState = () => {
 
     updateTime();
     updateUI();
-    updatePet();
     updateMood();
 
     logEntry(`Caught up, player has been away for ${catchUpTimeString}`)
@@ -843,7 +877,7 @@ const toCssUrl = (path) => {
 
 const updateSprite = () => {
     for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = toCssUrl(newPetSprite);
+        petSprite[i].style.backgroundImage = toCssUrl(currentsprite);
     }
 };
 
@@ -965,8 +999,8 @@ const selectNextPet = () => {
 };
 
 const petChoices = [
-    { species: 'Egg1', name: 'Babytchi', available: true, sprite: petSpecies.Eggs.Egg1.sprite },
-    { species: 'Egg2', name: 'Shirobabytchi', available: true, sprite: petSpecies.Eggs.Egg2.sprite }
+    { species: 'Egg1', name: 'Babytchi', available: true, sprite: petSpecies.Eggs.Egg1.sprite, species: petSpecies.Eggs.Egg1 },
+    { species: 'Egg2', name: 'Shirobabytchi', available: true, sprite: petSpecies.Eggs.Egg2.sprite, species: petSpecies.Eggs.Egg2 }
 ];
 
 const createSelectedPet = () => {
@@ -980,19 +1014,20 @@ const createSelectedPet = () => {
 
     deathFrame = undefined;
 
-    newPetSprite = choice.sprite;
+    currentsprite = choice.sprite;
+    currentSpecies = choice.species;
     updateSprite();
 
     petAnim();
     togglePetSelect();
     updateUI();
-    updatePet();
 
     logEntry(`New pet selected, ${pet.name} (${pet.species})`);
 };
 
 function gameLoop() {
     tick++;
+    pet.age += 1;
 
     updateTime();
 
@@ -1010,6 +1045,7 @@ function gameLoop() {
         pet.hygene -= 1;
     }
 
+    checkEvolution();
     updateUI();
     updateMood();
     updatePet();
@@ -1769,8 +1805,6 @@ const setScreen = (screenName) => {
     if (activeScreen === 'game1') {
         prepareGame1Menu();
     }
-
-    updatePet();
 };
 
 const activateCenterButton = () => {
