@@ -113,9 +113,36 @@ let gamePlayedCount3 = 0;
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
 
-const hungryBubble = document.getElementById('hungry');
-const tiredBubble = document.getElementById('tired');
-const dirtyBubble = document.getElementById('dirty');
+const hungryBubbles = document.querySelectorAll('[data-care-bubble="hungry"]');
+
+const tiredBubbles = document.querySelectorAll('[data-care-bubble="tired"]');
+
+const dirtyBubbles = document.querySelectorAll('[data-care-bubble="dirty"]');
+
+// Care request settings
+const CARE_RESPONSE_TIME_MS = 5 * 60 * 1000;       // 5 minutes to respond
+const CARE_REQUEST_MIN_DELAY_MS = 10 * 60 * 1000; // minimum 10 minutes
+const CARE_REQUEST_MAX_DELAY_MS = 20 * 60 * 1000; // maximum 20 minutes
+const CARE_PRIORITY_THRESHOLD = 25;
+
+const CARE_REQUEST_TYPES = ['hungry', 'tired', 'dirty'];
+
+const careRequestDetails = {
+    hungry: {
+        requestText: 'is hungry',
+        neededAction: 'food'
+    },
+
+    tired: {
+        requestText: 'is tired',
+        neededAction: 'sleep'
+    },
+
+    dirty: {
+        requestText: 'is dirty',
+        neededAction: 'a bath'
+    }
+};
 
 // pet sprites
 const petWrapper = document.getElementsByClassName('petWrapper');
@@ -123,7 +150,7 @@ const petSprite = document.getElementsByClassName('petSprite');
 const previewSprite = document.getElementsByClassName('previewSprite');
 
 // logs
-const clockDisplay = document.getElementById('clock');
+const clockDisplay = document.getElementsByClassName('clock');
 const logWindow = document.getElementById('eventLog');
 const logBtn = document.getElementById('logBtn');
 
@@ -170,7 +197,6 @@ const preparePanelForDrag = (panel) => {
 };
 
 // if window is out of view
-
 restorePanelPosition(optionsPanel, 'optionsX', 'optionsY');
 restorePanelPosition(logWindow, 'eventLogX', 'eventLogY');
 
@@ -508,6 +534,10 @@ let pet = {
     tired:      false,
     dirty:      false,
     sick:       false,
+    careMistakes: 0,
+    activeCareRequest: null,
+    careRequestDeadline: null,
+    nextCareRequestAt: null,
     mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
     age:        0,
     stage:      null,
@@ -554,6 +584,30 @@ const standardLiveSpriteConfig = {
         eating: 3,
         bathing: 4,
         sleeping: 5
+    }
+};
+
+// default sprite offset
+const normalSpriteOffset = {
+    x: 0,
+    y: 105
+};
+
+// specific animation offsets
+const careAnimationOffsets = {
+    eating: {
+        x: 0,
+        y: -135
+    },
+
+    bathing: {
+        x: 0,
+        y: 0
+    },
+
+    sleeping: {
+        x: 0,
+        y: -5
     }
 };
 
@@ -680,8 +734,9 @@ const renderSpriteFrame = (
     column,
     row,
     config,
-    spriteOffsetX = 0, // X axis offset for sprite positioning
-    spriteOffsetY = 75 // Y axis
+    spriteOffsetX = 0,
+    spriteOffsetY = 0,
+    offsetReferenceSize = spriteSizeConfig.max
 ) => {
     const frameWidth = sprite.clientWidth;
     const frameHeight = sprite.clientHeight;
@@ -690,31 +745,54 @@ const renderSpriteFrame = (
 
     const scaledFrameWidth = frameWidth * config.zoom;
     const scaledFrameHeight = frameHeight * config.zoom;
+
     const cropOffsetX = (scaledFrameWidth - frameWidth) / 2;
     const cropOffsetY = (scaledFrameHeight - frameHeight) / 2;
 
+    // Make offsets scale with the sprite's current size.
+    const offsetScaleX = frameWidth / offsetReferenceSize;
+    const offsetScaleY = frameHeight / offsetReferenceSize;
+
+    const responsiveOffsetX = spriteOffsetX * offsetScaleX;
+    const responsiveOffsetY = spriteOffsetY * offsetScaleY;
+
     sprite.style.backgroundRepeat = 'no-repeat';
+
     sprite.style.backgroundSize =
-        `${config.columns * scaledFrameWidth}px ${config.rows * scaledFrameHeight}px`;
+        `${config.columns * scaledFrameWidth}px ` +
+        `${config.rows * scaledFrameHeight}px`;
 
     const x =
         -(column * scaledFrameWidth + cropOffsetX) +
-        spriteOffsetX;
+        responsiveOffsetX;
 
     const y =
         -(row * scaledFrameHeight + cropOffsetY) +
-        spriteOffsetY;
+        responsiveOffsetY;
 
     sprite.style.backgroundPosition = `${x}px ${y}px`;
 };
 
-const setSpriteFrame = (column, row, config) => {
+const setSpriteFrame = (
+    column,
+    row,
+    config,
+    spriteOffset = normalSpriteOffset
+) => {
     setPetWrapperSize();
 
     for (let i = 0; i < petSprite.length; i++) {
-        renderSpriteFrame(petSprite[i], column, row, config);
+        renderSpriteFrame(
+            petSprite[i],
+            column,
+            row,
+            config,
+            spriteOffset.x,
+            spriteOffset.y
+        );
     }
 };
+
 // new pet menu positioning
 const renderPreviewSprites = () => {
     for (let i = 0; i < previewSprite.length; i++) {
@@ -723,8 +801,9 @@ const renderPreviewSprites = () => {
             0,
             0,
             standardLiveSpriteConfig,
-            0,  // X axis
-            -20 // Y axis
+            0,   // X-axis position
+            -30, // Y-axis position
+            90   // Preview sprite reference size
         );
     }
 };
@@ -733,13 +812,28 @@ const updateAnimation = () => {
     if (!pet.alive) return;
 
     const config = standardLiveSpriteConfig;
-    const row =
-        config.animationRows[pet.anim] ??
-        config.animationRows.idle;
 
+    const animationName =
+        config.animationRows[pet.anim] !== undefined
+            ? pet.anim
+            : 'idle';
+
+    const row = config.animationRows[animationName];
     const column = pet.pose === 2 ? 1 : 0;
 
-    setSpriteFrame(column, row, config);
+    // Care offsets are used only during an active care animation.
+    const careOffset = careAnimationOffsets[animationName];
+    const spriteOffset =
+        animOverride && careOffset
+            ? careOffset
+            : normalSpriteOffset;
+
+    setSpriteFrame(
+        column,
+        row,
+        config,
+        spriteOffset
+    );
 };
 
 const updatePet = () => {
@@ -758,7 +852,12 @@ const renderDeathFrame = () => {
     const column = frame[0];
     const row = frame[1];
 
-    setSpriteFrame(column, row, standardLiveSpriteConfig);
+    setSpriteFrame(
+        column,
+        row,
+        standardLiveSpriteConfig,
+        normalSpriteOffset
+    );
 };
 
 const playDeathAnim = () => {
@@ -872,7 +971,7 @@ const loadFromLocalstorage = () => {
     pet.name = restoredSpecies.name;
 
     updateSprite();
-
+    initializeCareRequestSystem();
     catchUpGameState();
     checkEvolution();
     updateUI();
@@ -921,8 +1020,8 @@ const updateTime = () => {
     clock = timeOfDay.slice(0, 5);
 
     // Debug number
-    //currentHour += 8;
-    //currentMinute = 35;
+    // currentHour += 8;
+    // currentMinute = 35;
     
     // time of day
     if (currentHour >= 6 && currentHour <= 12) {
@@ -946,7 +1045,9 @@ const updateTime = () => {
         document.body.style.backgroundColor = "var(--" + 'tod-night' +")";
    }
     
-    clockDisplay.innerText = `${clock} ${ToD}`;
+    for (let i = 0; i < clockDisplay.length; i++) {
+        clockDisplay[i].innerText = `${clock} ${ToD}`;
+    }
 
     // debug time log
     // console.log(`It's ${ToD} - Time:${clock} - ${currentMinute}`);
@@ -981,10 +1082,14 @@ const newPet = () => {
         tired:      false,
         dirty:      false,
         sick:       false,
+        careMistakes: 0,
+        activeCareRequest: null,
+        careRequestDeadline: null,
+        nextCareRequestAt: null,
         mood:       3,
         age:        0,
         stage:      null,
-        alive:      false,
+        alive:      true,
         idle:       true,
         pose:       1,
         species:    '',
@@ -992,6 +1097,330 @@ const newPet = () => {
         anim:       'idle' 
     };
 }
+
+/* =========================
+    Care request system
+========================= */
+
+const getRandomCareDelay = () => {
+    const delayRange =
+        CARE_REQUEST_MAX_DELAY_MS -
+        CARE_REQUEST_MIN_DELAY_MS;
+
+    return (
+        CARE_REQUEST_MIN_DELAY_MS +
+        Math.floor(Math.random() * (delayRange + 1))
+    );
+};
+
+const syncCareRequestFlags = () => {
+    pet.hungry =
+        pet.activeCareRequest === 'hungry';
+
+    pet.tired =
+        pet.activeCareRequest === 'tired';
+
+    pet.dirty =
+        pet.activeCareRequest === 'dirty';
+};
+
+const scheduleNextCareRequest = (
+    fromTime = Date.now()
+) => {
+    if (!pet.alive) {
+        pet.nextCareRequestAt = null;
+        return;
+    }
+
+    pet.nextCareRequestAt =
+        fromTime + getRandomCareDelay();
+};
+
+const clearActiveCareRequest = () => {
+    pet.activeCareRequest = null;
+    pet.careRequestDeadline = null;
+
+    pet.hungry = false;
+    pet.tired = false;
+    pet.dirty = false;
+
+    updateAlerts();
+};
+
+const chooseCareRequestType = (
+    requestedType = null
+) => {
+    // Debug commands can still force a specific request.
+    if (CARE_REQUEST_TYPES.includes(requestedType)) {
+        return requestedType;
+    }
+
+    const careNeeds = [
+        {
+            requestType: 'hungry',
+            value: pet.hunger
+        },
+        {
+            requestType: 'tired',
+            value: pet.energy
+        },
+        {
+            requestType: 'dirty',
+            value: pet.hygene
+        }
+    ];
+
+    const lowCareNeeds = careNeeds.filter(
+        (need) =>
+            need.value <= CARE_PRIORITY_THRESHOLD
+    );
+
+    /*
+    When one or more bars are low, prioritize
+    whichever bar currently has the lowest value.
+    */
+    if (lowCareNeeds.length > 0) {
+        const lowestValue = Math.min(
+            ...lowCareNeeds.map(
+                (need) => need.value
+            )
+        );
+
+        const mostUrgentNeeds = lowCareNeeds.filter(
+            (need) =>
+                need.value === lowestValue
+        );
+
+        // Randomly choose if multiple bars are equally low.
+        return mostUrgentNeeds[
+            Math.floor(
+                Math.random() *
+                mostUrgentNeeds.length
+            )
+        ].requestType;
+    }
+
+    // All bars are safe, so use a normal random request.
+    return CARE_REQUEST_TYPES[
+        Math.floor(
+            Math.random() *
+            CARE_REQUEST_TYPES.length
+        )
+    ];
+};
+
+const startCareRequest = (
+    requestedType = null
+) => {
+    if (!pet.alive) return false;
+
+    // Only allow one active request at a time
+    if (pet.activeCareRequest !== null) {
+        return false;
+    }
+
+    const requestType = chooseCareRequestType(requestedType);
+
+    pet.activeCareRequest = requestType;
+
+    pet.careRequestDeadline =
+        Date.now() + CARE_RESPONSE_TIME_MS;
+
+    pet.nextCareRequestAt = null;
+
+    syncCareRequestFlags();
+    updateAlerts();
+
+    logEntry(
+        `${pet.name} ` +
+        `${careRequestDetails[requestType].requestText}. ` +
+        `Respond within 5 minutes.`
+    );
+
+    return true;
+};
+
+const registerCareMistake = (now = Date.now()) => {
+    const missedRequest = pet.activeCareRequest;
+
+    if (!missedRequest) return;
+
+    pet.careMistakes =
+        Number(pet.careMistakes) || 0;
+
+    pet.careMistakes += 1;
+
+    logEntry(
+        `Care mistake #${pet.careMistakes}: ` +
+        `${pet.name}'s ${missedRequest} request was ignored.`
+    );
+
+    // Removes the request and hides its bubble.
+    clearActiveCareRequest();
+
+    // Starts the random wait for the next request.
+    scheduleNextCareRequest(now);
+
+    saveToLocalStorage();
+};
+
+const completeCareRequest = (
+    requestType
+) => {
+    if (
+        pet.activeCareRequest !== requestType
+    ) {
+        return false;
+    }
+
+    clearActiveCareRequest();
+    scheduleNextCareRequest();
+    updateAlerts();
+
+    return true;
+};
+
+const canUseCareAction = (
+    requestType
+) => {
+    if (!pet.alive) return false;
+    if (animOverride) return false;
+
+    if (
+        pet.activeCareRequest === requestType
+    ) {
+        return true;
+    }
+
+    if (pet.activeCareRequest) {
+        const currentNeed =
+            careRequestDetails[
+                pet.activeCareRequest
+            ].neededAction;
+
+        logEntry(
+            `${pet.name} is asking for ` +
+            `${currentNeed}, not this care option.`
+        );
+    } else {
+        logEntry(
+            `${pet.name} is not asking ` +
+            `for care right now.`
+        );
+    }
+
+    return false;
+};
+
+const initializeCareRequestSystem = () => {
+    pet.careMistakes =
+        Number(pet.careMistakes) || 0;
+
+    if (!pet.alive) {
+        clearActiveCareRequest();
+        pet.nextCareRequestAt = null;
+        return;
+    }
+
+    // Protect against old save files
+    if (
+        !CARE_REQUEST_TYPES.includes(
+            pet.activeCareRequest
+        )
+    ) {
+        pet.activeCareRequest = null;
+    }
+
+    const now = Date.now();
+
+    // Restore an active request
+    if (pet.activeCareRequest) {
+        const savedDeadline =
+            Number(pet.careRequestDeadline);
+
+        pet.careRequestDeadline =
+            Number.isFinite(savedDeadline) &&
+            savedDeadline > 0
+                ? savedDeadline
+                : now + CARE_RESPONSE_TIME_MS;
+
+        syncCareRequestFlags();
+
+        // Request expired while the game was closed
+        if (
+            now >= pet.careRequestDeadline
+        ) {
+            registerCareMistake(now);
+        }
+
+        return;
+    }
+
+    clearActiveCareRequest();
+
+    const savedNextRequest =
+        Number(pet.nextCareRequestAt);
+
+    pet.nextCareRequestAt =
+        Number.isFinite(savedNextRequest) &&
+        savedNextRequest > 0
+            ? savedNextRequest
+            : null;
+
+    if (pet.nextCareRequestAt === null) {
+        scheduleNextCareRequest(now);
+    }
+};
+
+const updateCareRequestSystem = () => {
+    if (!pet.alive) return;
+
+    const now = Date.now();
+
+    // There is currently an active request.
+    if (pet.activeCareRequest) {
+        const deadline =
+            Number(pet.careRequestDeadline);
+
+        if (
+            Number.isFinite(deadline) &&
+            now >= deadline
+        ) {
+            registerCareMistake(now);
+        }
+
+        return;
+    }
+
+    // No request and no scheduled request yet.
+    if (!pet.nextCareRequestAt) {
+        scheduleNextCareRequest(now);
+        return;
+    }
+
+    // Time to create the next request.
+    if (
+        now >= Number(pet.nextCareRequestAt)
+    ) {
+        startCareRequest();
+    }
+};
+
+// Debug command examples:
+// debugCareRequest('hungry')
+// debugCareRequest('tired')
+// debugCareRequest('dirty')
+// debugCareRequest('random')
+
+window.debugCareRequest = (
+    requestType = 'random'
+) => {
+    return startCareRequest(
+        requestType === 'random'
+            ? null
+            : requestType
+    );
+};
 
 const updateMood = () => {
     if (!pet.alive) return;
@@ -1035,12 +1464,18 @@ const petFeeding = () => {
     pet.anim = 'eating';
     animOverride = true;
 
+    // Render the care row and its own offset immediately.
+    updatePet();
     graduallyIncrease('hunger', updateHungerBar);
 
     setTimeout(() => {
         animOverride = false;
+
+        // Restore the correct normal animation and normal offset.
+        updateMood();
+        updatePet();
     }, 5000);
-}
+};
 
 const petBathing = () => {
     if (!pet.alive) return;
@@ -1049,12 +1484,18 @@ const petBathing = () => {
     pet.anim = 'bathing';
     animOverride = true;
 
+    // Render the care row and its own offset immediately.
+    updatePet();
     graduallyIncrease('hygene', updateHygeneBar);
 
     setTimeout(() => {
         animOverride = false;
+
+        // Restore the correct normal animation and normal offset.
+        updateMood();
+        updatePet();
     }, 5000);
-}
+};
 
 const petSleeping = () => {
     if (!pet.alive) return;
@@ -1063,12 +1504,18 @@ const petSleeping = () => {
     pet.anim = 'sleeping';
     animOverride = true;
 
+    // Render the care row and its own offset immediately.
+    updatePet();
     graduallyIncrease('energy', updateEnergyBar);
 
     setTimeout(() => {
         animOverride = false;
+
+        // Restore the correct normal animation and normal offset.
+        updateMood();
+        updatePet();
     }, 5000);
-}
+};
 
 /* ============
     Display
@@ -1083,7 +1530,7 @@ const petAnim = () => {
         updatePet();
     }, 750);
 }
-
+// 
 const toCssUrl = (path) => {
     return `url("${String(path).replaceAll('"', '\"')}")`;
 };
@@ -1095,9 +1542,16 @@ const updateSprite = () => {
 
     if (!spritePath) return;
 
+    const cssSpritePath = toCssUrl(spritePath);
+
+    // Update the normal home/menu pet sprites.
     for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage =
-            toCssUrl(spritePath);
+        petSprite[i].style.backgroundImage = cssSpritePath;
+    }
+
+    // Update the Block Drop mini-game character.
+    if (game1Player) {
+        game1Player.style.backgroundImage = cssSpritePath;
     }
 };
 
@@ -1219,8 +1673,20 @@ const selectNextPet = () => {
 };
 
 const petChoices = [
-    { species: 'Egg1', name: 'Babytchi', available: true, sprite: petSpecies.Eggs.Egg1.sprite, species: petSpecies.Eggs.Egg1 },
-    { species: 'Egg2', name: 'Shirobabytchi', available: true, sprite: petSpecies.Eggs.Egg2.sprite, species: petSpecies.Eggs.Egg2 }
+    {
+        id: 'Egg1',
+        name: 'Babytchi',
+        available: true,
+        sprite: petSpecies.Eggs.Egg1.sprite,
+        species: petSpecies.Eggs.Egg1
+    },
+    {
+        id: 'Egg2',
+        name: 'Shirobabytchi',
+        available: true,
+        sprite: petSpecies.Eggs.Egg2.sprite,
+        species: petSpecies.Eggs.Egg2
+    }
 ];
 
 const createSelectedPet = () => {
@@ -1235,8 +1701,10 @@ const createSelectedPet = () => {
     deathFrame = undefined;
 
     currentsprite = choice.sprite;
-    currentSpecies = choice.species;
+   currentSpecies = choice.species;
     updateSprite();
+
+    initializeCareRequestSystem();
 
     petAnim();
     togglePetSelect();
@@ -1252,6 +1720,8 @@ function gameLoop() {
     updateTime();
 
     if (!pet.alive) return;
+
+    updateCareRequestSystem();
 
     if (tick % 300 === 0) { // every 5 minutes
         pet.hunger -= 1;
@@ -1277,7 +1747,6 @@ function gameLoop() {
 const updateHungerBar = () => {
     pet.hunger = Math.max(0, pet.hunger);
     hungerBar.style.width = pet.hunger + '%';
-    pet.hungry = pet.hunger <= 20;
 
     if (pet.hunger > 50) {
         hungerBar.style.backgroundColor = green;
@@ -1291,7 +1760,6 @@ const updateHungerBar = () => {
 const updateEnergyBar = () => {
     pet.energy = Math.max(0, pet.energy);
     energyBar.style.width = pet.energy + '%';
-    pet.tired = pet.energy <= 20;
 
     if (pet.energy > 50) {
         energyBar.style.backgroundColor = green;
@@ -1305,7 +1773,6 @@ const updateEnergyBar = () => {
 const updateHygeneBar = () => {
     pet.hygene = Math.max(0, pet.hygene);
     hygeneBar.style.width = pet.hygene + '%';
-    pet.dirty = pet.hygene <= 20;
 
     if (pet.hygene > 50) {
         hygeneBar.style.backgroundColor = green;
@@ -1343,9 +1810,26 @@ const updateGeneralMoodBar = () => {
 };
 
 const updateAlerts = () => {
-    hungryBubble.classList.toggle('hidden', !pet.hungry);
-    tiredBubble.classList.toggle('hidden', !pet.tired);
-    dirtyBubble.classList.toggle('hidden', !pet.dirty);
+    hungryBubbles.forEach((bubble) => {
+        bubble.classList.toggle(
+            'hidden',
+            !pet.hungry
+        );
+    });
+
+    tiredBubbles.forEach((bubble) => {
+        bubble.classList.toggle(
+            'hidden',
+            !pet.tired
+        );
+    });
+
+    dirtyBubbles.forEach((bubble) => {
+        bubble.classList.toggle(
+            'hidden',
+            !pet.dirty
+        );
+    });
 };
 
 const updateStatusbars = () => {
@@ -1385,26 +1869,44 @@ const interactWithPet = () => {
 };
 
 const feedPet = () => {
-    if (!pet.alive || animOverride) return;
+    if (!canUseCareAction('hungry')) {
+        return;
+    }
+
     currentRoom = 1;
     checkSelection();
+
+    completeCareRequest('hungry');
     petFeeding();
+
     logEntry(`${pet.name} was fed.`);
 };
 
 const restPet = () => {
-    if (!pet.alive || animOverride) return;
+    if (!canUseCareAction('tired')) {
+        return;
+    }
+
     currentRoom = 2;
     checkSelection();
+
+    completeCareRequest('tired');
     petSleeping();
+
     logEntry(`${pet.name} went to sleep.`);
 };
 
 const cleanPet = () => {
-    if (!pet.alive || animOverride) return;
+    if (!canUseCareAction('dirty')) {
+        return;
+    }
+
     currentRoom = 3;
     checkSelection();
+
+    completeCareRequest('dirty');
     petBathing();
+
     logEntry(`${pet.name} had a bath.`);
 };
 
@@ -1542,9 +2044,8 @@ const miniGameButtonActions = {
 /* ==========================
     minigame functionality
 ========================== */
-
 //game 1 (falling blocks)
-const GAME1_MAX_MISSES = 3;
+const GAME1_MAX_MISSES = 9999;
 const GAME1_LANE_COUNT = 3;
 const GAME1_BLOCK_STYLES = ['blockPink', 'blockBlue', 'blockYellow', 'blockGreen'];
 

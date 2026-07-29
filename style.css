@@ -31,7 +31,7 @@ body{
     background-size: cover;
     overflow: hidden;
 
-    transition: background-color 1800s linear;
+    transition: background-color 600s linear;
 }
 
 .hidden {
@@ -196,6 +196,7 @@ body{
                 }
 
                 .frontPagePet {
+                    position: relative;
                     flex: 1;
                     min-height: 0;
                     display: flex;
@@ -207,6 +208,42 @@ body{
                         margin: 0.4vmin 0 0;
                         font-size: clamp(10px, 1.35vmin, 16px);
                         font-weight: bold;
+                    }
+                }
+
+                .careBubblesOverlay {
+                    position: absolute;
+                    z-index: 10;
+
+                    top: 0.8vmin;
+                    left: 0;
+                    right: 0;
+
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    justify-items: center;
+                    align-items: start;
+
+                    padding: 0 0.5vmin;
+                    box-sizing: border-box;
+
+                    pointer-events: none;
+
+                    .alertBubble {
+                        max-width: 95%;
+                        box-sizing: border-box;
+
+                        padding: 0.2vmin 0.7vmin;
+
+                        color: var(--background-color);
+                        background-color: #000;
+
+                        border-radius: 15px;
+
+                        font-size: clamp(8px, 1.2vmin, 14px);
+                        font-weight: bold;
+                        line-height: 1.2;
+                        text-align: center;
                     }
                 }
 
@@ -414,30 +451,13 @@ body{
                 }
 
                 #homeSection{
+                    position: relative;
                     flex: 1;
                     min-height: 0;
                     border-radius: 0 0 10px 10px;
                     display: flex;
                     flex-direction: column;
                     justify-content: space-between;
-
-                    #bubbleWrapper{
-                        display: grid;
-                        grid-template-columns: repeat(3, 1fr);
-                        justify-items: center;
-
-                        .alertBubble {
-                            font-size: 1.2vmin;
-                            font-weight: bold;
-
-                            padding: 0.2vmin 0.7vmin;
-                            margin-top: 0.9vmin;
-
-                            color: var(--background-color);
-                            background-color: #000;
-                            border-radius: 15px;
-                        }
-                    }
 
                     .petWrapper{
                         margin: 0 auto;
@@ -768,16 +788,11 @@ body{
                         p {
                             margin: 3vmin 0;
                         }
-                        
+                    }
 
-                        #homeSection{
-                            
-                            
-                            #bubbleWrapper{
-                                .alertBubble {
-                                    font-size: 2.5vmin;
-                                }
-                            }
+                    .careBubblesOverlay {
+                        .alertBubble {
+                            font-size: 2.5vmin;
                         }
                     }
                 }
@@ -929,10 +944,9 @@ Block Drop mini-game
     transform: translateX(-50%);
     transition: left 110ms ease-out;
 
-    background-image: url("./assets/pet one sprites verbeterd (2 breed).png");
     background-repeat: no-repeat;
-    background-size: 240% 700%;
-    background-position: -2px -1px;
+    background-size: 240% 650%;
+    background-position: -1px -9px;
     image-rendering: pixelated;
 }
 
