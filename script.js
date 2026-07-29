@@ -65,9 +65,12 @@ const miniGameStatus = {
     game3: document.getElementById('game3Status')
 };
 
-/*========================
- minigame declarations
- ====================== */
+// clear local data once
+// localStorage.clear();
+
+/* ============================
+    minigame 1 declarations
+============================ */
 const game1Window = document.getElementById('game1Container');
 const game1MainMenu = document.getElementById('game1MainMenu');
 const game1Playfield = document.getElementById('game1Playfield');
@@ -79,9 +82,6 @@ const game1GameOver = document.getElementById('game1GameOver');
 const game1FinalScore = document.getElementById('game1FinalScore');
 
 let game1Active = false;
-let game2Active = false;
-let game3Active = false;
-
 let game1CurrentScore = 0;
 let game1HighScore = Number(localStorage.getItem('game1HighScore')) || 0;
 let game1Misses = 0;
@@ -90,7 +90,19 @@ let game1AnimationFrame = null;
 let game1LastFrameTime = 0;
 let game1SpawnTimer = 0;
 let game1FallingBlocks = [];
- 
+
+/* ============================
+    minigame 2 declarations
+============================ */
+
+let game2Active = false;
+
+ /* ===========================
+    minigame 3 declarations
+============================ */
+
+ let game3Active = false;
+
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
 
@@ -98,9 +110,10 @@ const hungryBubble = document.getElementById('hungry');
 const tiredBubble = document.getElementById('tired');
 const dirtyBubble = document.getElementById('dirty');
 
-// pet div
+// pet sprites
 const petWrapper = document.getElementsByClassName('petWrapper');
 const petSprite = document.getElementsByClassName('petSprite');
+const previewSprite = document.getElementsByClassName('previewSprite');
 
 // logs
 const clockDisplay = document.getElementById('clock');
@@ -120,10 +133,10 @@ let dragOffsetY = 0;
 let logDragOffsetX = 0;
 let logDragOffsetY = 0;
 
-const isMobileLayout = () => window.matchMedia('(max-width: 500px)').matches;
+const isMobileView = () => window.matchMedia('(max-width: 500px)').matches;
 
 const restorePanelPosition = (panel, storageKeyX, storageKeyY) => {
-    if (isMobileLayout()) return;
+    if (isMobileView()) return;
 
     const savedX = localStorage.getItem(storageKeyX);
     const savedY = localStorage.getItem(storageKeyY);
@@ -149,14 +162,10 @@ const preparePanelForDrag = (panel) => {
     return rect;
 };
 
-// if windowi so ut of view
+// if window is out of view
 
 restorePanelPosition(optionsPanel, 'optionsX', 'optionsY');
 restorePanelPosition(logWindow, 'eventLogX', 'eventLogY');
-
-const test = () => {
-    console.log('tested');
-}
 
 // egg shellcolor
 const eggshell = document.getElementById('st1');
@@ -192,12 +201,289 @@ const roomBG = {
     shower: "url('./assets/z.png')"
 };
 
-// creatures (unused currently)
-let petSpecies = {
-    cat: "url('./assets/pet one sprites verbeterd (2 breed).png')",
-    dog: "",
-    bunny: ""
+// creature spirtes & names
+const petSpecies = {
+    Eggs: {
+        Egg1: {
+            sprite: "./assets/new sprites/upscaled/babies/Hatching_Baby_Babytchi.webp",
+            name: "Unborn Babytchi"
+        },
+        Egg2: {
+            sprite: "./assets/new sprites/upscaled/babies/Hatching_Baby_Shirobabytchi.webp",
+            name: "Unborn Shirobabytchi"
+        }
+    },
+    Babies: { 
+        Babytchi: { // > Tonmuratchi
+            sprite: "./assets/new sprites/upscaled/babies/Baby_Babytchi.webp",
+            name: "Babytchi"
+        },
+        Shirobabytchi: { // >  Muratchi
+            sprite: "./assets/new sprites/upscaled/babies/Baby_Shirobabytchi.webp",
+            name: "Shirobabytchi"
+        }
+    },
+    Children: { 
+        Marutchi: { // > Hasitamatchi & Kuchitamatchi
+            sprite: "./assets/new sprites/upscaled/children/Child_Marutchi.webp",
+            name: "Marutchi"
+        },
+        Tonmarutchi: { // > Tongaritchi & Tamatchi
+            sprite: "./assets/new sprites/upscaled/children/Child_Tonmarutchi.webp",
+            name: "Tonmarutchi"
+        }
+    },
+    Teens: {
+        Tamatchi: { // > Mametchi & Nyatchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Tamatchi.webp",
+            name: "Tamatchi"
+        },
+        Hasitamatchi: { // > Ginjirotchi & Kusatchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Hashitamatchi.webp",
+            name: "Hasitamatchi"
+        },
+        Kuchitamatchi: { // > Kuchipatchi & Nyorotchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Kuchitamatchi.webp",
+            name: "Kuchitamatchi"
+        },
+        Tongaritchi: { // > Pochitchi & Mimitchi
+            sprite: "./assets/new sprites/upscaled/teens/Teen_Tongaritchi.webp",
+            name: "Tongaritchi"
+        }
+    },
+    Adults: {
+        Mametchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Mametchi.webp",
+            name: "Mametchi"
+        },
+        Mimitchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Mimitchi.webp",
+            name: "Mimitchi"
+        },
+        Kusatchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Kusatchi.webp",
+            name: "Kusatchi"
+        },
+        Kuchipatchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Kuchipatchi.webp",
+            name: "Kuchipatchi"
+        },
+        Ginjirotchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Ginjirotchi.webp",
+            name: "Ginjirotchi"
+        },
+        Nyatchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adult_Nyatchi.webp",
+            name: "Nyatchi"
+        },
+        Nyorotchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adults_Nyorotchi.webp",
+            name: "Nyorotchi"
+        },
+        Pochitchi: {
+            sprite: "./assets/new sprites/upscaled/adults/Adults_Pochitchi.webp",
+            name: "Pochitchi"
+        }
+    }
 }
+
+/* ====================
+    Evolution logic
+==================== */
+
+const hour = 60 * 60;
+let optionB = false; // decide Pet A or B per evolution.
+
+// Default fallback until an egg is selected or a save is loaded.
+let currentSpecies = null;
+let currentsprite = null;
+
+// Finds the original petSpecies object.
+const getCanonicalSpecies = (species) => {
+    if (!species) return null;
+
+    const wantedSpecies = String(
+        typeof species === 'object'
+            ? species.name
+            : species
+    ).toLowerCase();
+
+    for (const group of Object.values(petSpecies)) {
+        for (const [speciesKey, speciesData] of Object.entries(group)) {
+            const matchesKey =
+                speciesKey.toLowerCase() === wantedSpecies;
+
+            const matchesName =
+                speciesData.name.toLowerCase() === wantedSpecies;
+
+            if (matchesKey || matchesName) {
+                return speciesData;
+            }
+        }
+    }
+
+    return null;
+};
+
+/*
+    1 hour   = Egg > Baby
+    24 hours = Baby > Child
+    60 hours = Child > Teen
+    120 hours = Teen > Adult
+*/
+const evolutionPaths = new Map([
+    // Eggs > Babies
+    [
+        petSpecies.Eggs.Egg1,
+        {
+            age: hour,
+            optionA: petSpecies.Babies.Babytchi
+        }
+    ],
+    [
+        petSpecies.Eggs.Egg2,
+        {
+            age: hour,
+            optionA: petSpecies.Babies.Shirobabytchi
+        }
+    ],
+
+    // Babies > Children
+    [
+        petSpecies.Babies.Babytchi,
+        {
+            age: hour * 24,
+            optionA: petSpecies.Children.Tonmarutchi
+        }
+    ],
+    [
+        petSpecies.Babies.Shirobabytchi,
+        {
+            age: hour * 24,
+            optionA: petSpecies.Children.Marutchi
+        }
+    ],
+
+    // Children > Teens
+    [
+        petSpecies.Children.Marutchi,
+        {
+            age: hour * 60,
+            optionA: petSpecies.Teens.Hasitamatchi,
+            optionB: petSpecies.Teens.Kuchitamatchi
+        }
+    ],
+    [
+        petSpecies.Children.Tonmarutchi,
+        {
+            age: hour * 60,
+            optionA: petSpecies.Teens.Tongaritchi,
+            optionB: petSpecies.Teens.Tamatchi
+        }
+    ],
+
+    // Teens > Adults
+    [
+        petSpecies.Teens.Tamatchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Mametchi,
+            optionB: petSpecies.Adults.Nyatchi
+        }
+    ],
+    [
+        petSpecies.Teens.Hasitamatchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Ginjirotchi,
+            optionB: petSpecies.Adults.Kusatchi
+        }
+    ],
+    [
+        petSpecies.Teens.Kuchitamatchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Kuchipatchi,
+            optionB: petSpecies.Adults.Nyorotchi
+        }
+    ],
+    [
+        petSpecies.Teens.Tongaritchi,
+        {
+            age: hour * 120,
+            optionA: petSpecies.Adults.Pochitchi,
+            optionB: petSpecies.Adults.Mimitchi
+        }
+    ]
+]);
+
+const evolveTo = (nextSpecies) => {
+    if (!nextSpecies || currentSpecies === nextSpecies) return;
+
+    const previousName = currentSpecies.name;
+
+    currentSpecies = nextSpecies;
+    currentsprite = nextSpecies.sprite;
+
+    pet.species = nextSpecies;
+    pet.name = nextSpecies.name;
+
+    // Change to the new species sprite.
+    updateSprite();
+    updatePet();
+
+    logEntry(`${previousName} evolved into ${nextSpecies.name}!`);
+};
+
+const checkEvolution = () => {
+    if (!pet.alive) return;
+
+    // Reconnect loaded save data to the original petSpecies object
+    const restoredSpecies = getCanonicalSpecies(pet.species);
+
+    if (restoredSpecies && currentSpecies !== restoredSpecies) {
+        currentSpecies = restoredSpecies;
+        currentsprite = restoredSpecies.sprite;
+    }
+
+    // run multiple evolutions in case of long time catch-up
+    let evolutionsThisCheck = 0;
+
+    while (evolutionsThisCheck < 4) {
+        const evolution = evolutionPaths.get(currentSpecies);
+
+        if (!evolution) break;
+        if (pet.age < evolution.age) break;
+
+        const nextSpecies =
+            optionB === true && evolution.optionB
+                ? evolution.optionB
+                : evolution.optionA;
+
+        evolveTo(nextSpecies);
+        evolutionsThisCheck++;
+    }
+};
+
+// ========================== //
+const findPetSprite = (species) => {
+    if (!species) return null;
+
+    const wantedSpecies = String(species).toLowerCase();
+
+    for (const group of Object.values(petSpecies)) {
+        for (const [speciesKey, speciesData] of Object.entries(group)) {
+            const matchesKey = speciesKey.toLowerCase() === wantedSpecies;
+            const matchesName = speciesData.name.toLowerCase() === wantedSpecies;
+
+            if (matchesKey || matchesName) {
+                return speciesData.sprite;
+            }
+        }
+    }
+
+    return null;
+};
 
 let pet = {
     hunger:     80,
@@ -206,6 +492,7 @@ let pet = {
     hungry:     false,
     tired:      false,
     dirty:      false,
+    sick:       false,
     mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
     age:        0,
     alive:      false,
@@ -214,6 +501,7 @@ let pet = {
     species:    '',
     name:       `unnamed`,
     anim:       'idle'
+    
 }
 
 let tick = 0;
@@ -231,25 +519,27 @@ let deathFrame;
     Sprite logic
 ========================= */
 
-const liveSpriteConfig = {
-    columns: 2,
-    rows: 6,
-    zoom: 1.12
+// Set to null for normal behaviour.
+const DEBUG_SPRITE_OVERRIDE = petSpecies.Adults.Mametchi;
+
+const spriteSizeConfig = {
+    min: 90,
+    max: 135,
+    viewportScale: 0.12
 };
 
-const deathSpriteConfig = {
+const standardLiveSpriteConfig = {
     columns: 2,
     rows: 6,
-    zoom: 1.12
-};
-
-const animationRows = {
-    idle: 0,
-    happy: 1,
-    unhappy: 2,
-    eating: 3,
-    bathing: 4,
-    sleeping: 5
+    zoom: 1.12,
+    animationRows: {
+        idle: 0,
+        happy: 1,
+        unhappy: 2,
+        eating: 3,
+        bathing: 4,
+        sleeping: 5
+    }
 };
 
 const deathFrames = [
@@ -268,53 +558,182 @@ const deathFrames = [
     [1, 2]  // frame 6
 ];
 
-const setPetWrapperSize = () => {
-    for (let i = 0; i < petWrapper.length; i++) {
-        const wrapper = petWrapper[i];
-        wrapper.style.width = 'clamp(100px, 12vmin, 135px)';
-        wrapper.style.height = 'clamp(100px, 12vmin, 135px)';
+const clampNumber = (value, min, max) => {
+    return Math.min(max, Math.max(min, value));
+};
+
+const getBoxSpacing = (style, sideA, sideB) => {
+    const firstValue = Number.parseFloat(style[sideA]) || 0;
+    const secondValue = Number.parseFloat(style[sideB]) || 0;
+
+    return firstValue + secondValue;
+};
+
+const getOuterHeight = (element) => {
+    const style = getComputedStyle(element);
+
+    if (style.display === 'none' || style.position === 'absolute' || style.position === 'fixed') {
+        return 0;
     }
+
+    return element.getBoundingClientRect().height +
+        getBoxSpacing(style, 'marginTop', 'marginBottom');
+};
+
+const getAvailableSquareSize = (wrapper) => {
+    const parent = wrapper.parentElement;
+
+    if (!parent || parent.clientWidth === 0 || parent.clientHeight === 0) {
+        return 0;
+    }
+
+    const parentStyle = getComputedStyle(parent);
+    const wrapperStyle = getComputedStyle(wrapper);
+
+    const parentContentWidth = parent.clientWidth -
+        getBoxSpacing(parentStyle, 'paddingLeft', 'paddingRight');
+
+    const parentContentHeight = parent.clientHeight -
+        getBoxSpacing(parentStyle, 'paddingTop', 'paddingBottom');
+
+    const wrapperHorizontalSpace = getBoxSpacing(
+        wrapperStyle,
+        'marginLeft',
+        'marginRight'
+    );
+
+    const wrapperVerticalSpace = getBoxSpacing(
+        wrapperStyle,
+        'marginTop',
+        'marginBottom'
+    );
+
+    let siblingHeight = 0;
+
+    for (const sibling of parent.children) {
+        if (sibling !== wrapper) {
+            siblingHeight += getOuterHeight(sibling);
+        }
+    }
+
+    const availableWidth = parentContentWidth - wrapperHorizontalSpace;
+    const availableHeight = parentContentHeight - siblingHeight - wrapperVerticalSpace;
+
+    return Math.floor(Math.max(0, Math.min(availableWidth, availableHeight)));
+};
+
+const setPetWrapperSize = () => {
+    const fluidSize =
+        Math.min(window.innerWidth, window.innerHeight) *
+        spriteSizeConfig.viewportScale;
+
+    const preferredSize = clampNumber(
+        fluidSize,
+        spriteSizeConfig.min,
+        spriteSizeConfig.max
+    );
+
+    const visibleWrappers = Array.from(petWrapper).filter((wrapper) => {
+        return wrapper.offsetParent !== null;
+    });
+
+    visibleWrappers.forEach((wrapper) => {
+        wrapper.style.width = `${preferredSize}px`;
+        wrapper.style.height = `${preferredSize}px`;
+    });
+
+    // Force recalculation of layout before measuring.
+    void document.documentElement.offsetHeight;
+
+    visibleWrappers.forEach((wrapper) => {
+        const availableSize = getAvailableSquareSize(wrapper);
+
+        if (availableSize <= 0) return;
+
+        const finalSize = Math.max(
+            1,
+            Math.min(preferredSize, availableSize)
+        );
+
+        wrapper.style.width = `${finalSize}px`;
+        wrapper.style.height = `${finalSize}px`;
+    });
+};
+
+const renderSpriteFrame = (
+    sprite,
+    column,
+    row,
+    config,
+    spriteOffsetX = 0, // X axis offset for sprite positioning
+    spriteOffsetY = 80 // Y axis
+) => {
+    const frameWidth = sprite.clientWidth;
+    const frameHeight = sprite.clientHeight;
+
+    if (frameWidth <= 0 || frameHeight <= 0) return;
+
+    const scaledFrameWidth = frameWidth * config.zoom;
+    const scaledFrameHeight = frameHeight * config.zoom;
+    const cropOffsetX = (scaledFrameWidth - frameWidth) / 2;
+    const cropOffsetY = (scaledFrameHeight - frameHeight) / 2;
+
+    sprite.style.backgroundRepeat = 'no-repeat';
+    sprite.style.backgroundSize =
+        `${config.columns * scaledFrameWidth}px ${config.rows * scaledFrameHeight}px`;
+
+    const x =
+        -(column * scaledFrameWidth + cropOffsetX) +
+        spriteOffsetX;
+
+    const y =
+        -(row * scaledFrameHeight + cropOffsetY) +
+        spriteOffsetY;
+
+    sprite.style.backgroundPosition = `${x}px ${y}px`;
 };
 
 const setSpriteFrame = (column, row, config) => {
     setPetWrapperSize();
 
     for (let i = 0; i < petSprite.length; i++) {
-        const sprite = petSprite[i];
-        const wrapper = petWrapper[i] || sprite.parentElement;
+        renderSpriteFrame(petSprite[i], column, row, config);
+    }
+};
 
-        const frameSize = wrapper.offsetWidth;
-        const scaledFrame = frameSize * config.zoom;
-        const cropOffset = (scaledFrame - frameSize) / 2;
-
-        sprite.style.width = '100%';
-        sprite.style.height = '100%';
-        sprite.style.backgroundRepeat = 'no-repeat';
-
-        sprite.style.backgroundSize =
-            `${config.columns * config.zoom * 100}% ${config.rows * config.zoom * 100}%`;
-
-        const x = -(column * scaledFrame + cropOffset);
-        const y = -(row * scaledFrame + cropOffset);
-
-        sprite.style.backgroundPosition = `${x}px ${y}px`;
+const renderPreviewSprites = () => {
+    for (let i = 0; i < previewSprite.length; i++) {
+        renderSpriteFrame(
+            previewSprite[i],
+            0,
+            0,
+            standardLiveSpriteConfig,
+            0,  // X axis
+            -20 // Y axis
+        );
     }
 };
 
 const updateAnimation = () => {
     if (!pet.alive) return;
 
-    const row = animationRows[pet.anim] ?? animationRows.idle;
+    const config = standardLiveSpriteConfig;
+    const row =
+        config.animationRows[pet.anim] ??
+        config.animationRows.idle;
+
     const column = pet.pose === 2 ? 1 : 0;
 
-    setSpriteFrame(column, row, liveSpriteConfig);
+    setSpriteFrame(column, row, config);
 };
 
 const updatePet = () => {
     if (!pet.alive) return;
-    for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = petSpecies[pet.species];
-    }
+    pet.name = currentSpecies.name
+    pet.species = currentSpecies;
+    currentsprite = currentSpecies.sprite;
+    
+    findPetSprite(pet.species)
     updateAnimation();
 };
 
@@ -324,7 +743,7 @@ const renderDeathFrame = () => {
     const column = frame[0];
     const row = frame[1];
 
-    setSpriteFrame(column, row, deathSpriteConfig);
+    setSpriteFrame(column, row, standardLiveSpriteConfig);
 };
 
 const playDeathAnim = () => {
@@ -344,12 +763,10 @@ const startDeathAnimation = () => {
     clearInterval(animInterval);
     animInterval = null;
 
-    for (let i = 0; i < petSprite.length; i++) {
-        petSprite[i].style.backgroundImage = "url('./assets/mametchi dying (6 lang).png')";
-    }
-        
+    updateSprite();
+
     runner(deathFrames.length);
-    
+
     setTimeout(() => {
         logEntry(`${pet.name} has died...`);
         togglePetSelect();
@@ -357,14 +774,26 @@ const startDeathAnimation = () => {
     }, 10000);
 };
 
-window.addEventListener('resize', () => {
+let spriteResizeFrame = null;
+
+const refreshSpriteLayout = () => {
+    spriteResizeFrame = null;
     setPetWrapperSize();
+    renderPreviewSprites();
 
     if (pet.alive) {
         updateAnimation();
     } else if (deathFrame !== undefined) {
         renderDeathFrame();
     }
+};
+
+window.addEventListener('resize', () => {
+    if (spriteResizeFrame !== null) {
+        cancelAnimationFrame(spriteResizeFrame);
+    }
+
+    spriteResizeFrame = requestAnimationFrame(refreshSpriteLayout);
 });
 
 /* ===============
@@ -384,9 +813,9 @@ window.onbeforeunload = function () {
 }
 
 const loadFromLocalstorage = () => {
-    let petState = localStorage.getItem('petState');
-    let innerColor = localStorage.getItem('innerColor');
-    let frameColor = localStorage.getItem('frameColor');
+    const petState = localStorage.getItem('petState');
+    const innerColor = localStorage.getItem('innerColor');
+    const frameColor = localStorage.getItem('frameColor');
 
     if (frameColor) {
         eggshell.style.fill = frameColor.startsWith('#')
@@ -412,9 +841,27 @@ const loadFromLocalstorage = () => {
         return;
     }
 
+    // restore the species object from the saved data
+    const restoredSpecies = getCanonicalSpecies(pet.species);
+
+    if (!restoredSpecies) {
+        console.error('Could not restore species:', pet.species);
+        pet.alive = false;
+        return;
+    }
+
+    currentSpecies = restoredSpecies;
+    currentsprite = restoredSpecies.sprite;
+
+    pet.species = restoredSpecies;
+    pet.name = restoredSpecies.name;
+
+    updateSprite();
+
     catchUpGameState();
+    checkEvolution();
     updateUI();
-}
+};
 
 const catchUpGameState = () => {
     let savedDate = localStorage.getItem('savedDate');
@@ -432,6 +879,9 @@ const catchUpGameState = () => {
 
     if (catchUpSeconds <= 0) return;
 
+    pet.age += catchUpSeconds;
+    checkEvolution();
+
     pet.hunger -= catchUpSeconds;
     pet.energy -= catchUpSeconds;
     pet.hygene -= catchUpSeconds;
@@ -442,7 +892,6 @@ const catchUpGameState = () => {
 
     updateTime();
     updateUI();
-    updatePet();
     updateMood();
 
     logEntry(`Caught up, player has been away for ${catchUpTimeString}`)
@@ -485,15 +934,21 @@ const updateTime = () => {
     clockDisplay.innerText = `${clock} ${ToD}`;
 
     // debug time log
-    console.log(`It's ${ToD} - Time:${clock} - ${currentMinute}`);
+    // console.log(`It's ${ToD} - Time:${clock} - ${currentMinute}`);
 }
 
 const togglePetSelect = () => {
     if (!pet.alive) {
         activeScreen = 'home';
         selectedMenuIndex = 1;
+
         petMenu.classList.remove('hidden');
         renderPetSelection();
+
+        // delay the preview sprite rendering to ensure the DOM is updated before measuring
+        requestAnimationFrame(() => {
+            renderPreviewSprites();
+        });
     } else {
         petMenu.classList.add('hidden');
     }
@@ -610,6 +1065,23 @@ const petAnim = () => {
         updatePet();
     }, 750);
 }
+
+const toCssUrl = (path) => {
+    return `url("${String(path).replaceAll('"', '\"')}")`;
+};
+
+const updateSprite = () => {
+    const spritePath =
+        DEBUG_SPRITE_OVERRIDE?.sprite ??
+        currentsprite;
+
+    if (!spritePath) return;
+
+    for (let i = 0; i < petSprite.length; i++) {
+        petSprite[i].style.backgroundImage =
+            toCssUrl(spritePath);
+    }
+};
 
 function runner(repeats) {
     if (repeats > 0) {
@@ -729,18 +1201,12 @@ const selectNextPet = () => {
 };
 
 const petChoices = [
-    { species: 'cat', name: 'Mametchi', available: true },
-    { species: 'dog', name: 'TBD', available: false },
-    { species: 'bunny', name: 'TBD', available: false }
+    { species: 'Egg1', name: 'Babytchi', available: true, sprite: petSpecies.Eggs.Egg1.sprite, species: petSpecies.Eggs.Egg1 },
+    { species: 'Egg2', name: 'Shirobabytchi', available: true, sprite: petSpecies.Eggs.Egg2.sprite, species: petSpecies.Eggs.Egg2 }
 ];
 
 const createSelectedPet = () => {
     const choice = petChoices[selectedPet - 1];
-
-    if (!choice.available) {
-        logEntry(`That pet has not been implemented yet.`);
-        return;
-    }
 
     pet = newPet();
     pet.species = choice.species;
@@ -749,8 +1215,12 @@ const createSelectedPet = () => {
     pet.pose = 1;
 
     deathFrame = undefined;
+
+    currentsprite = choice.sprite;
+    currentSpecies = choice.species;
+    updateSprite();
+
     petAnim();
-    updatePet();
     togglePetSelect();
     updateUI();
 
@@ -759,6 +1229,7 @@ const createSelectedPet = () => {
 
 function gameLoop() {
     tick++;
+    pet.age += 1;
 
     updateTime();
 
@@ -776,6 +1247,7 @@ function gameLoop() {
         pet.hygene -= 1;
     }
 
+    checkEvolution();
     updateUI();
     updateMood();
     updatePet();
@@ -926,8 +1398,6 @@ const renderGameSelection = () => {
     gameCards.forEach((card, index) => {
         card.classList.toggle('active', index === selectedGame);
     });
-
-    // gameMessage.textContent = `${gameNames[selectedGame]} selected — press the center button to open it.`;
 };
 
 const selectPreviousGame = () => {
@@ -1537,8 +2007,6 @@ const setScreen = (screenName) => {
     if (activeScreen === 'game1') {
         prepareGame1Menu();
     }
-
-    updatePet();
 };
 
 const activateCenterButton = () => {
@@ -1604,7 +2072,7 @@ document.addEventListener('keydown', handleKeyboardControls);
 
 // options panel drag logic
 optionsPanel.addEventListener('mousedown', (event) => {
-    if (isMobileLayout()) return;
+    if (isMobileView()) return;
 
     event.preventDefault();
 
@@ -1626,7 +2094,7 @@ optionsPanel.addEventListener('mousedown', (event) => {
 
 // event log drag logic
 logWindow.addEventListener('mousedown', (event) => {
-    if (isMobileLayout()) return;
+    if (isMobileView()) return;
 
     event.preventDefault();
 
@@ -1690,20 +2158,36 @@ document.addEventListener('mouseup', () => {
 =============== */
 const init = () => {
     tick = 0;
-    setPetWrapperSize();
+
     loadFromLocalstorage();
-    logWindow.innerHTML = localStorage.getItem('eventLog') || '';
+
+    logWindow.innerHTML =
+        localStorage.getItem('eventLog') || '';
+
     prepareGame1Menu();
 
     setScreen('home');
     togglePetSelect();
+
     updateTime();
     updateUI();
+
+    //delay the initial rendering of the pet wrapper size and sprite update to ensure the DOM is fully loaded
+    requestAnimationFrame(() => {
+        setPetWrapperSize();
+        renderPreviewSprites();
+
+        if (pet.alive) {
+            updateSprite();
+            updatePet();
+        }
+    });
+
     petAnim();
     updateMood();
-    updatePet();
 
     setInterval(gameLoop, 1000);
-    setInterval(saveToLocalStorage, 300000); // 5min periodic save
+    setInterval(saveToLocalStorage, 300000);
 };
+
 init();

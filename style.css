@@ -215,17 +215,31 @@ body{
                 #homeSection .petWrapper {
                     width: clamp(90px, 12vmin, 135px);
                     height: clamp(90px, 12vmin, 135px);
+                    max-width: 100%;
+                    max-height: 100%;
+                    min-width: 0;
+                    min-height: 0;
+                    flex-shrink: 1;
+                    aspect-ratio: 1 / 1;
                     display: flex;
                     justify-content: center;
                     align-items: center;
                     overflow: hidden;
                 }
 
+                /* Position sprite with this */
+                .petWrapper {
+                    transform: translate(0, 0px);
+                    /* border: solid 1px #000; */ 
+                }
+ 
                 .petSprite {
                     width: 100%;
                     height: 100%;
-                    background-image: url("./assets/pet one sprites verbeterd (2 breed).png");
+                    background-image: url("./assets/new sprites/upscaled/adults/Adult_Mametchi.webp");
                     background-repeat: no-repeat;
+                    background-position: 0 0;
+                    image-rendering: pixelated;
                 }
 
                 .mainMenuWrapper{
@@ -318,12 +332,11 @@ body{
                 }
 
                 #newPetMenu {
-                    grid-area: gameSection;
                     position: absolute;
-                    height: 100%;
-                    width: 100%;
+                    inset: 0;
 
-                    justify-self: center;
+                    z-index: 10;
+                    box-sizing: border-box;
 
                     background-color: var(--background-color);
 
@@ -364,27 +377,26 @@ body{
                     .petImages {
                         display: flex;
                         justify-content: space-around;
+                        align-items: center;
+                        gap: 1vmin;
+
+                        .previewSprite{
+                            width: clamp(48px, 9vmin, 90px);
+                            max-width: 42%;
+                            height: auto;
+                            aspect-ratio: 1 / 1;
+                            flex: 0 1 auto;
+                            background-repeat: no-repeat;
+                            background-position: 0 0;
+                            image-rendering: pixelated;
+                        }
 
                         .previewEgg1 {
-                            background: url("./assets/pet one sprites verbeterd (2 breed).png");
-
-                            height: 8vmin;
-                            width: 8vmin;
-
-                            background-repeat: no-repeat;
-                            background-size: 300%;
-                            background-position: -1.6vmin -1.8vmin;
+                            background-image: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Babytchi.webp");
                         }
 
                         .previewEgg2 {
-                            background: url("./assets/pet one sprites verbeterd (2 breed).png");
-
-                            height: 8vmin;
-                            width: 8vmin;
-
-                            background-repeat: no-repeat;
-                            background-size: 300%;
-                            background-position: -1.6vmin -1.8vmin;
+                            background-image: url("./assets/new sprites/upscaled/babies/Hatching_Baby_Shirobabytchi.webp");
                         }
                     }
 
@@ -429,22 +441,6 @@ body{
 
                     .petWrapper{
                         margin: 0 auto;
-
-                        width: clamp(90px, 12vmin, 130px);
-                        height: clamp(90px, 12vmin, 130px);
-
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        overflow: hidden;
-
-                        #petSprite{
-                            width: 100%;
-                            height: 100%;
-
-                            background-image: url("./assets/pet one sprites verbeterd (2 breed).png");
-                            background-repeat: no-repeat;
-                        }
                     }
 
                 }
@@ -624,8 +620,8 @@ body{
     }
 
     .buttonWrapper {
-        left: 360px;
         position: inherit;
+        width: 70vmin;
     }
 
     #eventLog {
@@ -720,6 +716,112 @@ body{
         
 }
 
+@media (max-width: 500px) {
+    body{
+        background-image: none;
+
+        background-image: url(assets/tamagotchi-background-mobile.svg);
+        #tamagotchiBackground{
+            width: 90vmin;
+            height: 200vmin;  
+            
+            
+            #tamagotchiHolder{
+                width: 90vmin;
+                height: 250vmin;
+                top: -5vmin;
+            }
+            
+            #egg-shape-background{
+                top: 50vmin;
+                left: 4vmin;
+                width: 80vmin;
+            }
+        
+            #breaking-egg-shape-background{
+                top: 64vmin;
+                left: 13vmin;
+                width: 62vmin;
+            
+                #tamagotchiScreen{
+                    top: -2vmin;
+                    width: 60vmin;
+                    
+                    #MainMenu{
+
+                        .mainMenuWrapper{
+                            display: flex;
+                        }
+
+                        #newPetMenu {
+                            .petSelect {
+                                width: 100%;
+                                
+                                .option {
+                                    margin: 0 7%;
+                                }                                
+                            }
+                        }
+                    }
+
+                    #gameSection{
+                        p {
+                            margin: 3vmin 0;
+                        }
+                        
+
+                        #homeSection{
+                            
+                            
+                            #bubbleWrapper{
+                                .alertBubble {
+                                    font-size: 2.5vmin;
+                                }
+                            }
+                        }
+                    }
+                }
+            
+                #MaingameButtonsSection{
+                    top: 65vmin;
+
+                    #MainleftButton,
+                    #MainselectButton,
+                    #MainrightButton{
+                        width: 8vmin;
+                        height: 8vmin;
+                    }
+
+                    i {
+                        font-size: 8vmin;
+                        margin: -0.6vmin 0 0 -2.6vmin;
+                    }
+                }   
+            }  
+            
+            .buttonWrapper {
+                position: inherit;
+                width: 90vmin;
+                top: 50vmin;
+            }
+
+            #eventLog {
+                width: 85vmin;
+                height: 21vmin;
+                top: 5vmin;
+                right: 4vmin;
+            }
+
+            #options{
+                position: absolute;
+                top: 25vmin;
+            }
+
+        }
+
+
+    }
+}
 
 
 /* =============================
@@ -857,19 +959,19 @@ Block Drop mini-game
 }
 
 .game1FallingBlock.blockPink {
-    background-color: #f07a9d;
+    background-color: var(--red2);
 }
 
 .game1FallingBlock.blockBlue {
-    background-color: #5fa8ff;
+    background-color: var(--blue);
 }
 
 .game1FallingBlock.blockYellow {
-    background-color: #f7d154;
+    background-color: var(--yellow);
 }
 
 .game1FallingBlock.blockGreen {
-    background-color: #6fd48a;
+    background-color: var(--green);
 }
 
 .game1FallingBlock.caught {
