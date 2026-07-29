@@ -140,7 +140,7 @@
 
                             <div class="gameCard" data-game="1">
                                 <strong>2</strong>
-                                <span>Game 2</span>
+                                <span>Under what cup is the ball?</span>
                             </div>
 
                             <div class="gameCard" data-game="2">
@@ -211,7 +211,35 @@
                 <section id="game2Screen" class="screenPanel miniGameWindow noDisplay">
                     <div class="miniGamePlayArea">
                         <div class="miniGamePlaceholder">
-                            Game 2 will be built here.
+                            <div id="game2MainMenu">
+                                <p>Press center to start</p>
+                                <p class="game2Instructions">
+                                    Watch the ball and guess which cup it is under.<br>
+                                    Three misses ends the game.
+                                </p>
+                                <div class="g2HS">
+                                    High score: <span id="game2HighScore">0</span>
+                                </div>
+
+                                <div id="game2Container" class="noDisplay">
+                                    <div class="game2Hud">
+                                        <div class="g2Score">Score: <span id="game2Score">0</span></div>
+                                        <div class="g2Misses">Misses: <span id="game2Misses">0</span>/3</div>
+                                    </div>
+                                    <div id="game2Playfield">
+                                        <div class="game2Cup cupOne"></div>
+                                        <div class="game2Cup cupTwo"></div>
+                                        <div class="game2Cup cupThree"></div>
+
+                                        <div id="game2Ball"></div>
+
+                                        <div id="game2GameOver" class="noDisplay">
+                                            <strong>Game over!</strong>
+                                            <span id="game2FinalScore">Score: 0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

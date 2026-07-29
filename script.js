@@ -1478,15 +1478,18 @@ const game1Right = () => {
 };
 
 const game2Left = () => {
-    updateMiniGameStatus('game2', 'Game 2: left button pressed.');
+   if (!game2Active) {  return; }
 };
 
 const game2Center = () => {
-    updateMiniGameStatus('game2', 'Game 2: center button pressed.');
+   if (!game2Active) {
+        startGame2();
+        console.log('Game 2 started.');
+    }
 };
 
 const game2Right = () => {
-    updateMiniGameStatus('game2', 'Game 2: right button pressed.');
+    if (!game2Active) {  return; }
 };
 
 const game3Left = () => {
@@ -1508,9 +1511,9 @@ const miniGameButtonActions = {
         right: { label: 'Move catcher right', onPress: game1Right }
     },
     game2: {
-        left: { label: 'Game 2 left action', onPress: game2Left },
-        center: { label: 'Game 2 center action', onPress: game2Center },
-        right: { label: 'Game 2 right action', onPress: game2Right }
+        left: { label: 'Game 2 choose left cup', onPress: game2Left },
+        center: { label: 'Game 2 choose center cup', onPress: game2Center },
+        right: { label: 'Game 2 choose right cup', onPress: game2Right }
     },
     game3: {
         left: { label: 'Game 3 left action', onPress: game3Left },
@@ -1718,9 +1721,14 @@ function game1ScoreCheck() {
     }
 }
 
-// game 2
+// game 2 (what cup is it under)
+const GAME2_MAX_MISSES = 3;
 
-
+function updateGame2Hud() {
+    game2ScoreDisplay.textContent = game2CurrentScore;
+    game2MissesDisplay.textContent = game2Misses;
+    game2HighScoreDisplay.textContent = game2HighScore;
+}
 // game 3
 
 
