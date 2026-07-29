@@ -69,7 +69,7 @@ const miniGameStatus = {
 // localStorage.clear();
 
 /* ============================
-    minigame 1 declarations
+    minigame 1 declarations - Falling blocks
 ============================ */
 const game1Window = document.getElementById('game1Container');
 const game1MainMenu = document.getElementById('game1MainMenu');
@@ -91,17 +91,24 @@ let game1LastFrameTime = 0;
 let game1SpawnTimer = 0;
 let game1FallingBlocks = [];
 
+let gamePlayedCount1 = 0;
+
 /* ============================
     minigame 2 declarations
 ============================ */
 
 let game2Active = false;
 
- /* ===========================
-    minigame 3 declarations
-============================ */
+let gamePlayedCount2 = 0;
 
- let game3Active = false;
+ /* ===========================
+    minigame 3 declarations - rock paper scissors
+============================ */
+let game3Options = ["Rock", "Paper", "Scissors"];
+
+let game3Active = false;
+
+let gamePlayedCount3 = 0;
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
@@ -291,7 +298,7 @@ const petSpecies = {
     Evolution logic
 ==================== */
 
-const hour = 60 * 60;
+const hour = 1 * 1; // 60 * 60;
 let optionB = false; // decide Pet A or B per evolution.
 
 // Default fallback until an egg is selected or a save is loaded.
@@ -455,6 +462,8 @@ const checkEvolution = () => {
         if (!evolution) break;
         if (pet.age < evolution.age) break;
 
+        checkGamesPlayed();
+
         const nextSpecies =
             optionB === true && evolution.optionB
                 ? evolution.optionB
@@ -464,6 +473,12 @@ const checkEvolution = () => {
         evolutionsThisCheck++;
     }
 };
+
+function checkGamesPlayed() {
+    if (currentSpecies === petSpecies.Children.Marutchi && gamePlayedCount2 >= 1) {
+        
+    }
+}
 
 // ========================== //
 const findPetSprite = (species) => {
@@ -495,13 +510,13 @@ let pet = {
     sick:       false,
     mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
     age:        0,
+    stage:      null,
     alive:      false,
     idle:       true,
     pose:       1,
     species:    '',
     name:       `unnamed`,
-    anim:       'idle'
-    
+    anim:       'idle'    
 }
 
 let tick = 0;
@@ -520,7 +535,7 @@ let deathFrame;
 ========================= */
 
 // Set to null for normal behaviour.
-const DEBUG_SPRITE_OVERRIDE = petSpecies.Adults.Mametchi;
+const DEBUG_SPRITE_OVERRIDE = null // petSpecies.Adults.Mametchi;
 
 const spriteSizeConfig = {
     min: 90,
@@ -659,14 +674,14 @@ const setPetWrapperSize = () => {
         wrapper.style.height = `${finalSize}px`;
     });
 };
-
+// sprite positioning
 const renderSpriteFrame = (
     sprite,
     column,
     row,
     config,
     spriteOffsetX = 0, // X axis offset for sprite positioning
-    spriteOffsetY = 80 // Y axis
+    spriteOffsetY = 75 // Y axis
 ) => {
     const frameWidth = sprite.clientWidth;
     const frameHeight = sprite.clientHeight;
@@ -700,7 +715,7 @@ const setSpriteFrame = (column, row, config) => {
         renderSpriteFrame(petSprite[i], column, row, config);
     }
 };
-
+// new pet menu positioning
 const renderPreviewSprites = () => {
     for (let i = 0; i < previewSprite.length; i++) {
         renderSpriteFrame(
@@ -957,7 +972,7 @@ const togglePetSelect = () => {
     renderScreenButtons();
 };
 
-const newPet = () => {
+const newPet = () => { 
     return {
         hunger:     80,
         energy:     80,
@@ -965,13 +980,16 @@ const newPet = () => {
         hungry:     false,
         tired:      false,
         dirty:      false,
+        sick:       false,
         mood:       3,
         age:        0,
-        alive:      true,
-        anim:       'idle',
+        stage:      null,
+        alive:      false,
+        idle:       true,
         pose:       1,
         species:    '',
-        name:       'unnamed'
+        name:       `unnamed`,
+        anim:       'idle' 
     };
 }
 
@@ -1483,6 +1501,7 @@ const game2Left = () => {
 
 const game2Center = () => {
     updateMiniGameStatus('game2', 'Game 2: center button pressed.');
+    gamePlayedCount2 += 1; // remove later
 };
 
 const game2Right = () => {
@@ -1495,6 +1514,7 @@ const game3Left = () => {
 
 const game3Center = () => {
     updateMiniGameStatus('game3', 'Game 3: center button pressed.');
+    gamePlayedCount3 += 1; // remove later
 };
 
 const game3Right = () => {
@@ -1656,6 +1676,7 @@ function endGame1() {
     updateGame1Hud();
     logEntry(`Block Drop ended with a score of ${game1CurrentScore}.`);
     game1ScoreCheck();
+    gamePlayedCount1 += 1;
 }
 
 function game1Loop(timestamp) {
@@ -1721,7 +1742,7 @@ function game1ScoreCheck() {
 // game 2
 
 
-// game 3
+// game 3 - rock paper scissors
 
 
 /* =============================
@@ -2172,7 +2193,7 @@ const init = () => {
     updateTime();
     updateUI();
 
-    //delay the initial rendering of the pet wrapper size and sprite update to ensure the DOM is fully loaded
+    // delay rendering & size calc until DOM is fully loaded
     requestAnimationFrame(() => {
         setPetWrapperSize();
         renderPreviewSprites();
