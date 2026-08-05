@@ -4,7 +4,7 @@
 const petMenu = document.getElementById('newPetMenu');
 const screenLabel = document.getElementById('screenLabel');
 const buttonMount = document.getElementById('MaingameButtonsSection');
-const petNameDisplay = document.getElementById('petNameDisplay');
+// const petNameDisplay = document.querySelectorAll(".petNameDisplay");
 
 const screenElements = {
     home: document.getElementById('MainMenu'),
@@ -124,6 +124,8 @@ const CARE_RESPONSE_TIME_MS = 5 * 60 * 1000;       // 5 minutes to respond
 const CARE_REQUEST_MIN_DELAY_MS = 10 * 60 * 1000; // minimum 10 minutes
 const CARE_REQUEST_MAX_DELAY_MS = 20 * 60 * 1000; // maximum 20 minutes
 const CARE_PRIORITY_THRESHOLD = 25;
+const OFFLINE_CARE_REQUEST_MAX_AGE_MS = 2 * 60 * 60 * 1000;
+const CATCH_UP_REQUEST_DELAY_MS = 6 * 1000;
 
 const CARE_REQUEST_TYPES = ['hungry', 'tired', 'dirty'];
 
@@ -538,6 +540,7 @@ let pet = {
     activeCareRequest: null,
     careRequestDeadline: null,
     nextCareRequestAt: null,
+    catchUpCareQueue: [],
     mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
     age:        0,
     stage:      null,
@@ -575,14 +578,14 @@ const spriteSizeConfig = {
 
 const standardLiveSpriteConfig = {
     columns: 2,
-    rows: 6,
-    zoom: 1.12,
+    rows: 5,
+    zoom: 1.125,
     animationRows: {
-        idle: 0,
-        happy: 1,
-        unhappy: 2,
-        eating: 3,
-        bathing: 4,
+        idle: 1,
+        happy: 2,
+        unhappy: 3,
+        eating: 5,
+        bathing: 3,
         sleeping: 5
     }
 };
@@ -590,24 +593,24 @@ const standardLiveSpriteConfig = {
 // default sprite offset
 const normalSpriteOffset = {
     x: 0,
-    y: 105
+    y: 125
 };
 
 // specific animation offsets
 const careAnimationOffsets = {
     eating: {
         x: 0,
-        y: -135
+        y: 275
     },
 
     bathing: {
         x: 0,
-        y: 0
+        y: 425
     },
 
     sleeping: {
         x: 0,
-        y: -5
+        y: 125
     }
 };
 
@@ -971,42 +974,159 @@ const loadFromLocalstorage = () => {
     pet.name = restoredSpecies.name;
 
     updateSprite();
-    initializeCareRequestSystem();
     catchUpGameState();
+    initializeCareRequestSystem();
     checkEvolution();
     updateUI();
 };
 
 const catchUpGameState = () => {
-    let savedDate = localStorage.getItem('savedDate');
+    const savedDate = localStorage.getItem('savedDate');
     if (savedDate === null) return;
 
-    let oldSaveDate = new Date(savedDate);
-    let currentTime = Date.now();
-    let savedTime = oldSaveDate.getTime();
+    const oldSaveDate = new Date(savedDate);
+    const currentTime = Date.now();
+    const savedTime = oldSaveDate.getTime();
 
-    let timeDifference = currentTime - savedTime;
-    let catchUpSeconds = Math.floor(timeDifference / 1000);
-    let catchUpMinutes = Math.floor(catchUpSeconds / 60);
-    let catchUpHours = Math.floor(catchUpMinutes / 60);
-    let catchUpTimeString = `${catchUpHours}h ${catchUpMinutes % 60}m ${catchUpSeconds % 60}s`;
+    if (!Number.isFinite(savedTime)) return;
+
+    const timeDifference = currentTime - savedTime;
+    const catchUpSeconds = Math.floor(timeDifference / 1000);
+    const catchUpMinutes = Math.floor(catchUpSeconds / 60);
+    const catchUpHours = Math.floor(catchUpMinutes / 60);
+    const catchUpTimeString = `${catchUpHours}h ${catchUpMinutes % 60}m ${catchUpSeconds % 60}s`;
 
     if (catchUpSeconds <= 0) return;
 
     pet.age += catchUpSeconds;
     checkEvolution();
 
-    pet.hunger -= catchUpSeconds;
-    pet.energy -= catchUpSeconds;
-    pet.hygene -= catchUpSeconds;
+    pet.hunger -= Math.floor(catchUpSeconds / 300);
+    pet.energy -= Math.floor(catchUpSeconds / 180);
+    pet.hygene -= Math.floor(catchUpSeconds / 240);
 
-    pet.hunger = Math.max(0, pet.hunger);
-    pet.energy = Math.max(0, pet.energy);
-    pet.hygene = Math.max(0, pet.hygene);
+    pet.hunger = Math.max(1, pet.hunger);
+    pet.energy = Math.max(1, pet.energy);
+    pet.hygene = Math.max(1, pet.hygene);
+
+    pet.careMistakes = Number(pet.careMistakes) || 0;
+    pet.catchUpCareQueue = Array.isArray(pet.catchUpCareQueue)
+        ? pet.catchUpCareQueue.filter(
+            (requestType, index, queue) =>
+                CARE_REQUEST_TYPES.includes(requestType) &&
+                queue.indexOf(requestType) === index
+        )
+        : [];
+
+    let expiredOfflineRequestType = null;
+
+    if (
+        CARE_REQUEST_TYPES.includes(pet.activeCareRequest)
+    ) {
+        if (
+            timeDifference >=
+            OFFLINE_CARE_REQUEST_MAX_AGE_MS
+        ) {
+            expiredOfflineRequestType =
+                pet.activeCareRequest;
+
+            pet.careMistakes += 1;
+
+            logEntry(
+                `Care mistake #${pet.careMistakes}: ` +
+                `${pet.name}'s ${expiredOfflineRequestType} request expired while offline.`
+            );
+
+            clearActiveCareRequest();
+        } else {
+            pet.careRequestDeadline =
+                currentTime + CARE_RESPONSE_TIME_MS;
+
+            syncCareRequestFlags();
+            updateAlerts();
+        }
+    }
+
+    if (expiredOfflineRequestType) {
+        pet.catchUpCareQueue =
+            pet.catchUpCareQueue.filter(
+                (requestType) =>
+                    requestType !==
+                    expiredOfflineRequestType
+            );
+    }
+
+    const queuedRequestTypes = new Set(
+        pet.catchUpCareQueue
+    );
+
+    if (pet.activeCareRequest) {
+        queuedRequestTypes.add(
+            pet.activeCareRequest
+        );
+    }
+
+    const offlineNeeds = [
+        {
+            requestType: 'hungry',
+            value: pet.hunger
+        },
+        {
+            requestType: 'tired',
+            value: pet.energy
+        },
+        {
+            requestType: 'dirty',
+            value: pet.hygene
+        }
+    ];
+
+    const newCatchUpRequests = offlineNeeds
+        .filter(
+            (need) =>
+                need.value <=
+                    CARE_PRIORITY_THRESHOLD &&
+                need.requestType !==
+                    expiredOfflineRequestType &&
+                !queuedRequestTypes.has(
+                    need.requestType
+                )
+        )
+        .sort(
+            (firstNeed, secondNeed) =>
+                firstNeed.value - secondNeed.value
+        )
+        .map(
+            (need) => need.requestType
+        );
+
+    pet.catchUpCareQueue.push(
+        ...newCatchUpRequests
+    );
+
+    if (
+        !pet.activeCareRequest &&
+        pet.catchUpCareQueue.length > 0
+    ) {
+        const nextCatchUpRequest =
+            pet.catchUpCareQueue.shift();
+
+        startCareRequest(
+            nextCatchUpRequest
+        );
+    } else if (
+        !pet.activeCareRequest &&
+        expiredOfflineRequestType
+    ) {
+        scheduleNextCareRequest(
+            currentTime
+        );
+    }
 
     updateTime();
     updateUI();
     updateMood();
+    saveToLocalStorage();
 
     logEntry(`Caught up, player has been away for ${catchUpTimeString}`)
 }
@@ -1075,9 +1195,9 @@ const togglePetSelect = () => {
 
 const newPet = () => { 
     return {
-        hunger:     80,
-        energy:     80,
-        hygene:     80,
+        hunger:     60,
+        energy:     60,
+        hygene:     60,
         hungry:     false,
         tired:      false,
         dirty:      false,
@@ -1086,6 +1206,7 @@ const newPet = () => {
         activeCareRequest: null,
         careRequestDeadline: null,
         nextCareRequestAt: null,
+        catchUpCareQueue: [],
         mood:       3,
         age:        0,
         stage:      null,
@@ -1259,7 +1380,15 @@ const registerCareMistake = (now = Date.now()) => {
     clearActiveCareRequest();
 
     // Starts the random wait for the next request.
-    scheduleNextCareRequest(now);
+    if (
+        Array.isArray(pet.catchUpCareQueue) &&
+        pet.catchUpCareQueue.length > 0
+    ) {
+        pet.nextCareRequestAt =
+            now + CATCH_UP_REQUEST_DELAY_MS;
+    } else {
+        scheduleNextCareRequest(now);
+    }
 
     saveToLocalStorage();
 };
@@ -1274,7 +1403,17 @@ const completeCareRequest = (
     }
 
     clearActiveCareRequest();
-    scheduleNextCareRequest();
+
+    if (
+        Array.isArray(pet.catchUpCareQueue) &&
+        pet.catchUpCareQueue.length > 0
+    ) {
+        pet.nextCareRequestAt =
+            Date.now() + CATCH_UP_REQUEST_DELAY_MS;
+    } else {
+        scheduleNextCareRequest();
+    }
+
     updateAlerts();
 
     return true;
@@ -1316,9 +1455,20 @@ const initializeCareRequestSystem = () => {
     pet.careMistakes =
         Number(pet.careMistakes) || 0;
 
+    pet.catchUpCareQueue = Array.isArray(
+        pet.catchUpCareQueue
+    )
+        ? pet.catchUpCareQueue.filter(
+            (requestType, index, queue) =>
+                CARE_REQUEST_TYPES.includes(requestType) &&
+                queue.indexOf(requestType) === index
+        )
+        : [];
+
     if (!pet.alive) {
         clearActiveCareRequest();
         pet.nextCareRequestAt = null;
+        pet.catchUpCareQueue = [];
         return;
     }
 
@@ -1402,7 +1552,15 @@ const updateCareRequestSystem = () => {
     if (
         now >= Number(pet.nextCareRequestAt)
     ) {
-        startCareRequest();
+        const nextCatchUpRequest =
+            Array.isArray(pet.catchUpCareQueue) &&
+            pet.catchUpCareQueue.length > 0
+                ? pet.catchUpCareQueue.shift()
+                : null;
+
+        startCareRequest(
+            nextCatchUpRequest
+        );
     }
 };
 
@@ -1433,12 +1591,15 @@ const updateMood = () => {
     } else if (pet.hunger < 20 || pet.energy < 20 || pet.hygene < 20) {
         pet.mood = 1;
         pet.anim = 'unhappy';
+        console.log('pet is unhappy');
     } else if (pet.hunger < 50 || pet.energy < 50 || pet.hygene < 50) {
         pet.mood = 2;
         pet.anim = 'idle';
+        console.log('pet is neutral');
     } else {
         pet.mood = 3;
         pet.anim = 'happy';
+        console.log('pet is happy');
     }
 }
 
@@ -1840,7 +2001,9 @@ const updateStatusbars = () => {
 };
 
 const updatePetName = () => {
-    petNameDisplay.textContent = pet.alive ? pet.name : 'No pet selected';
+    document.querySelectorAll(".petNameDisplay").forEach((nameDisplay) => {
+    nameDisplay.textContent = pet.name;
+});
 };
 
 const updateUI = () => {
@@ -2045,7 +2208,7 @@ const miniGameButtonActions = {
     minigame functionality
 ========================== */
 //game 1 (falling blocks)
-const GAME1_MAX_MISSES = 9999;
+const GAME1_MAX_MISSES = 3;
 const GAME1_LANE_COUNT = 3;
 const GAME1_BLOCK_STYLES = ['blockPink', 'blockBlue', 'blockYellow', 'blockGreen'];
 

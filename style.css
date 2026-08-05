@@ -162,7 +162,8 @@ body{
 
                 .generalMoodWrapper {
                     width: 100%;
-                    flex: 0 0 20%;
+                    height: 30px;
+                    /*flex: 0 0 20%;*/
                     box-sizing: border-box;
                     display: flex;
                     flex-direction: column;
@@ -192,7 +193,6 @@ body{
                             transition: width 250ms ease;
                         }
                     }
-
                 }
 
                 .frontPagePet {
@@ -203,19 +203,20 @@ body{
                     flex-direction: column;
                     justify-content: center;
                     align-items: center;
+                }
 
-                    #petNameDisplay {
-                        margin: 0.4vmin 0 0;
-                        font-size: clamp(10px, 1.35vmin, 16px);
-                        font-weight: bold;
-                    }
+                .petNameDisplay {
+                    margin: 0.4vmin 0 0;
+                    font-size: clamp(10px, 1.35vmin, 16px);
+                    font-weight: bold;
+                    text-align: center;
                 }
 
                 .careBubblesOverlay {
                     position: absolute;
                     z-index: 10;
 
-                    top: 0.8vmin;
+                    top: 0vmin;
                     left: 0;
                     right: 0;
 
@@ -252,11 +253,6 @@ body{
                 #homeSection .petWrapper {
                     width: clamp(90px, 12vmin, 135px);
                     height: clamp(90px, 12vmin, 135px);
-                    max-width: 100%;
-                    max-height: 100%;
-                    min-width: 0;
-                    min-height: 0;
-                    flex-shrink: 1;
                     aspect-ratio: 1 / 1;
                     display: flex;
                     justify-content: center;
@@ -267,7 +263,7 @@ body{
                 /* Position sprite with this */
                 .petWrapper {
                     transform: translate(0, 0px);
-                    /* border: solid 1px #000; */ 
+                    border: solid 1px #000;
                 }
  
                 .petSprite {
@@ -308,8 +304,7 @@ body{
                             overflow: hidden;
                         }
                     } 
-                }
-                
+                }                
 
                 p {
                     display: flex;
@@ -317,11 +312,12 @@ body{
                 }
 
                 #statusBarWrapper{
+                    height: 30px;
                     display: flex;
                     flex-direction: row;
                     justify-content: space-around;
 
-                    flex: 0 0 20%;
+                    /*flex: 0 0 20%;*/
                     box-sizing: border-box;
 
                     border-bottom: black solid 1px;
@@ -336,7 +332,7 @@ body{
                         align-items: center;
 
                         p{
-                            margin: 0.5vmin;
+                            margin: -0.2vmin;
                         }
                     }
 
