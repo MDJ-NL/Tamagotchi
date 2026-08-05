@@ -94,8 +94,21 @@ let game1FallingBlocks = [];
 /* ============================
     minigame 2 declarations
 ============================ */
+const game2Window = document.getElementById('game2Container');
+const game2MainMenu = document.getElementById('game2MainMenu');
+const game2Playfield = document.getElementById('game2Playfield');
+const game2ScoreDisplay = document.getElementById('game2Score');
+const game2MissesDisplay = document.getElementById('game2Misses');
+const game2HighScoreDisplay = document.getElementById('game2HighScore');
+const game2GameOver = document.getElementById('game2GameOver');
+const game2FinalScore = document.getElementById('game2FinalScore');
 
 let game2Active = false;
+let game2CurrentScore = 0;
+let game2HighScore = Number(localStorage.getItem('game2HighScore')) || 0;
+let game2Misses = 0;
+let game2CupPositions = [0, 1, 2];
+let game2BallPosition = 0;
 
  /* ===========================
     minigame 3 declarations
@@ -1723,12 +1736,21 @@ function game1ScoreCheck() {
 
 // game 2 (what cup is it under)
 const GAME2_MAX_MISSES = 3;
+const GAME2_CUP_COUNT = 3;
+
 
 function updateGame2Hud() {
     game2ScoreDisplay.textContent = game2CurrentScore;
     game2MissesDisplay.textContent = game2Misses;
     game2HighScoreDisplay.textContent = game2HighScore;
 }
+
+function addBallToRandomCup() {
+    game2BallPosition = Math.floor(Math.random() * game2CupPositions.length);
+
+    //animate the ball being placed under the cup
+}
+
 // game 3
 
 
