@@ -1738,6 +1738,30 @@ function game1ScoreCheck() {
 const GAME2_MAX_MISSES = 3;
 const GAME2_CUP_COUNT = 3;
 
+function startGame2() {
+    // stopGame1Loop();
+    // clearGame1Blocks();
+
+    // game1CurrentScore = 0;
+    // game1Misses = 0;
+    // game1PlayerLane = 1;
+    // game1SpawnTimer = 0;
+    // game1LastFrameTime = 0;
+    // game1Active = true;
+
+    // game1MainMenu.classList.add('noDisplay');
+    // game1Window.classList.remove('noDisplay');
+    // game1GameOver.classList.add('noDisplay');
+
+    // updateGame1Hud();
+    // setGame1PlayerLane();
+
+    // game1AnimationFrame = requestAnimationFrame(game1Loop);
+    // logEntry('Block Drop started.');
+
+    
+}
+
 
 function updateGame2Hud() {
     game2ScoreDisplay.textContent = game2CurrentScore;
@@ -1749,6 +1773,15 @@ function addBallToRandomCup() {
     game2BallPosition = Math.floor(Math.random() * game2CupPositions.length);
 
     //animate the ball being placed under the cup
+}
+
+function shuffleCups(){
+    //two cups swap positions, the ball may or may not be under one of them
+    GAME2_CUP_COUNT[0] = game2CupPositions[0];
+    GAME2_CUP_COUNT[1] = game2CupPositions[1];
+    GAME2_CUP_COUNT[2] = game2CupPositions[2];
+
+    
 }
 
 // game 3
