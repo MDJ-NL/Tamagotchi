@@ -2525,30 +2525,21 @@ function game1ScoreCheck() {
 
 // game 2 (what cup is it under)
 const GAME2_MAX_MISSES = 3;
-const GAME2_CUP_COUNT = 3;
+let GAME2_CUP_COUNT = 3;
 
 function startGame2() {
-    // stopGame1Loop();
-    // clearGame1Blocks();
 
-    // game1CurrentScore = 0;
-    // game1Misses = 0;
-    // game1PlayerLane = 1;
-    // game1SpawnTimer = 0;
-    // game1LastFrameTime = 0;
-    // game1Active = true;
+    game2MainMenu.classList.add('noDisplay');
+    game2Window.classList.remove('noDisplay');
+    game2GameOver.classList.add('noDisplay');
 
-    // game1MainMenu.classList.add('noDisplay');
-    // game1Window.classList.remove('noDisplay');
-    // game1GameOver.classList.add('noDisplay');
+    game2CurrentScore = 0;
+    game2Misses = 0;
+    game2Active = true;
+    addBallToRandomCup();
 
-    // updateGame1Hud();
-    // setGame1PlayerLane();
 
-    // game1AnimationFrame = requestAnimationFrame(game1Loop);
-    // logEntry('Block Drop started.');
-
-    
+    updateGame2Hud();
 }
 
 
@@ -2566,10 +2557,7 @@ function addBallToRandomCup() {
 
 function shuffleCups(){
     //two cups swap positions, the ball may or may not be under one of them
-    GAME2_CUP_COUNT[0] = game2CupPositions[0];
-    GAME2_CUP_COUNT[1] = game2CupPositions[1];
-    GAME2_CUP_COUNT[2] = game2CupPositions[2];
-
+    game2CupPositions = Math.floor(Math.random() * game2CupPositions.length);
     
 }
 
