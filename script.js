@@ -1,4 +1,29 @@
-/* =============================
+/* ==================
+    Debug commands
+================== 
+
+    Set care values
+pet.hunger = 10;
+pet.energy = 10;
+pet.hygene = 10;
+updateUI();
+
+    Set care mistakes
+pet.careMistakes = 3;
+
+    Force care request
+debugCareRequest('hungry');
+debugCareRequest('tired');
+debugCareRequest('dirty');
+debugCareRequest('random');
+
+    Set game counts
+pet.gamePlayedCount1 = 6;
+pet.gamePlayedCount2 = 0;
+pet.gamePlayedCount3 = 0;
+
+
+================================
     Variables & declarations
 ============================= */
 const petMenu = document.getElementById('newPetMenu');
@@ -91,15 +116,11 @@ let game1LastFrameTime = 0;
 let game1SpawnTimer = 0;
 let game1FallingBlocks = [];
 
-let gamePlayedCount1 = 0;
-
 /* ============================
     minigame 2 declarations
 ============================ */
 
 let game2Active = false;
-
-let gamePlayedCount2 = 0;
 
  /* ===========================
     minigame 3 declarations - rock paper scissors
@@ -107,8 +128,6 @@ let gamePlayedCount2 = 0;
 let game3Options = ["Rock", "Paper", "Scissors"];
 
 let game3Active = false;
-
-let gamePlayedCount3 = 0;
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
@@ -120,14 +139,14 @@ const tiredBubbles = document.querySelectorAll('[data-care-bubble="tired"]');
 const dirtyBubbles = document.querySelectorAll('[data-care-bubble="dirty"]');
 
 // Care request settings
-const CARE_RESPONSE_TIME_MS = 5 * 60 * 1000;       // 5 minutes to respond
-const CARE_REQUEST_MIN_DELAY_MS = 10 * 60 * 1000; // minimum 10 minutes
-const CARE_REQUEST_MAX_DELAY_MS = 20 * 60 * 1000; // maximum 20 minutes
-const CARE_PRIORITY_THRESHOLD = 25;
-const OFFLINE_CARE_REQUEST_MAX_AGE_MS = 2 * 60 * 60 * 1000;
-const CATCH_UP_REQUEST_DELAY_MS = 6 * 1000;
+const careResponseTime = 5 * 60 * 1000; // 5 minutes
+const careDelayMin = 10 * 60 * 1000;    // 10 minutes
+const careDelayMax = 20 * 60 * 1000;    // 20 minutes
+const carePriority = 25;
+const catchUpDelay = 6 * 1000;
+const gamesRequired = 6;
 
-const CARE_REQUEST_TYPES = ['hungry', 'tired', 'dirty'];
+const careRequestTypes = ['hungry', 'tired', 'dirty'];
 
 const careRequestDetails = {
     hungry: {
@@ -327,7 +346,6 @@ const petSpecies = {
 ==================== */
 
 const hour = 1 * 1; // 60 * 60;
-let optionB = false; // decide Pet A or B per evolution.
 
 // Default fallback until an egg is selected or a save is loaded.
 let currentSpecies = null;
@@ -361,24 +379,31 @@ const getCanonicalSpecies = (species) => {
 };
 
 /*
-    1 hour   = Egg > Baby
-    24 hours = Baby > Child
-    60 hours = Child > Teen
-    120 hours = Teen > Adult
+    Stage durations:
+    Egg   = 1 hour
+    Baby  = 23 hours
+    Child = 36 hours
+    Teen  = 60 hours
+
+    Total evolution ages:
+    Baby  = 1 hour
+    Child = 24 hours
+    Teen  = 60 hours
+    Adult = 120 hours
 */
 const evolutionPaths = new Map([
     // Eggs > Babies
     [
         petSpecies.Eggs.Egg1,
         {
-            age: hour,
+            age: hour * 1,
             optionA: petSpecies.Babies.Babytchi
         }
     ],
     [
         petSpecies.Eggs.Egg2,
         {
-            age: hour,
+            age: hour * 1,
             optionA: petSpecies.Babies.Shirobabytchi
         }
     ],
@@ -387,14 +412,14 @@ const evolutionPaths = new Map([
     [
         petSpecies.Babies.Babytchi,
         {
-            age: hour * 24,
+            age: hour * 23,
             optionA: petSpecies.Children.Tonmarutchi
         }
     ],
     [
         petSpecies.Babies.Shirobabytchi,
         {
-            age: hour * 24,
+            age: hour * 23,
             optionA: petSpecies.Children.Marutchi
         }
     ],
@@ -403,17 +428,19 @@ const evolutionPaths = new Map([
     [
         petSpecies.Children.Marutchi,
         {
-            age: hour * 60,
+            age: hour * 36,
             optionA: petSpecies.Teens.Hasitamatchi,
-            optionB: petSpecies.Teens.Kuchitamatchi
+            optionB: petSpecies.Teens.Kuchitamatchi,
+            optionBMinCareMistakes: 3
         }
     ],
     [
         petSpecies.Children.Tonmarutchi,
         {
-            age: hour * 60,
+            age: hour * 36,
             optionA: petSpecies.Teens.Tongaritchi,
-            optionB: petSpecies.Teens.Tamatchi
+            optionB: petSpecies.Teens.Tamatchi,
+            optionBMinCareMistakes: 3
         }
     ],
 
@@ -421,33 +448,37 @@ const evolutionPaths = new Map([
     [
         petSpecies.Teens.Tamatchi,
         {
-            age: hour * 120,
+            age: hour * 60,
             optionA: petSpecies.Adults.Mametchi,
-            optionB: petSpecies.Adults.Nyatchi
+            optionB: petSpecies.Adults.Nyatchi,
+            optionBMinCareMistakes: 2
         }
     ],
     [
         petSpecies.Teens.Hasitamatchi,
         {
-            age: hour * 120,
+            age: hour * 60,
             optionA: petSpecies.Adults.Ginjirotchi,
-            optionB: petSpecies.Adults.Kusatchi
+            optionB: petSpecies.Adults.Kusatchi,
+            optionBMinCareMistakes: 2
         }
     ],
     [
         petSpecies.Teens.Kuchitamatchi,
         {
-            age: hour * 120,
+            age: hour * 60,
             optionA: petSpecies.Adults.Kuchipatchi,
-            optionB: petSpecies.Adults.Nyorotchi
+            optionB: petSpecies.Adults.Nyorotchi,
+            optionBMinCareMistakes: 2
         }
     ],
     [
         petSpecies.Teens.Tongaritchi,
         {
-            age: hour * 120,
+            age: hour * 60,
             optionA: petSpecies.Adults.Pochitchi,
-            optionB: petSpecies.Adults.Mimitchi
+            optionB: petSpecies.Adults.Mimitchi,
+            optionBMinCareMistakes: 2
         }
     ]
 ]);
@@ -463,49 +494,93 @@ const evolveTo = (nextSpecies) => {
     pet.species = nextSpecies;
     pet.name = nextSpecies.name;
 
+    // New growth stage starts at current total age.
+    pet.stageStartedAtAge = pet.age;
+
+    // Care mistakes only count for current growth stage.
+    pet.careMistakes = 0;
+
+    pet.gamePlayedCount1 = 0;
+    pet.gamePlayedCount2 = 0;
+    pet.gamePlayedCount3 = 0;
+
     // Change to the new species sprite.
     updateSprite();
     updatePet();
 
     logEntry(`${previousName} evolved into ${nextSpecies.name}!`);
+    saveToLocalStorage();
 };
 
 const checkEvolution = () => {
     if (!pet.alive) return;
 
-    // Reconnect loaded save data to the original petSpecies object
-    const restoredSpecies = getCanonicalSpecies(pet.species);
+    // Reconnect loaded save data to the original petSpecies object.
+    const restoredSpecies =
+        getCanonicalSpecies(pet.species);
 
-    if (restoredSpecies && currentSpecies !== restoredSpecies) {
+    if (
+        restoredSpecies &&
+        currentSpecies !== restoredSpecies
+    ) {
         currentSpecies = restoredSpecies;
         currentsprite = restoredSpecies.sprite;
     }
 
-    // run multiple evolutions in case of long time catch-up
-    let evolutionsThisCheck = 0;
+    const evolution =
+        evolutionPaths.get(currentSpecies);
 
-    while (evolutionsThisCheck < 4) {
-        const evolution = evolutionPaths.get(currentSpecies);
+    if (!evolution) return;
 
-        if (!evolution) break;
-        if (pet.age < evolution.age) break;
+    const ageInCurrentStage =
+        pet.age - pet.stageStartedAtAge;
 
+    if (ageInCurrentStage < evolution.age) {
+        return;
+    }
+
+    const careMistakes =
+        Number(pet.careMistakes) || 0;
+
+    const enoughGamesPlayed =
         checkGamesPlayed();
 
-        const nextSpecies =
-            optionB === true && evolution.optionB
-                ? evolution.optionB
-                : evolution.optionA;
+    const underCareMistakeThreshold =
+        Number.isFinite(
+            evolution.optionBMinCareMistakes
+        ) &&
+        careMistakes <
+            evolution.optionBMinCareMistakes;
 
-        evolveTo(nextSpecies);
-        evolutionsThisCheck++;
+    let nextSpecies;
+
+    if (!evolution.optionB) {
+        // Egg > Baby and Baby > Child
+        // only have one possible result.
+        nextSpecies = evolution.optionA;
+    } else if (
+        underCareMistakeThreshold &&
+        enoughGamesPlayed
+    ) {
+        // Good care AND enough games.
+        nextSpecies = evolution.optionA;
+    } else {
+        // Too many care mistakes OR not enough games.
+        nextSpecies = evolution.optionB;
     }
+
+    evolveTo(nextSpecies);
 };
 
 function checkGamesPlayed() {
-    if (currentSpecies === petSpecies.Children.Marutchi && gamePlayedCount2 >= 1) {
-        
-    }
+    const totalGamesPlayed =
+        pet.gamePlayedCount1 +
+        pet.gamePlayedCount2 +
+        pet.gamePlayedCount3;
+
+    return (
+        totalGamesPlayed >= gamesRequired
+    );
 }
 
 // ========================== //
@@ -537,12 +612,16 @@ let pet = {
     dirty:      false,
     sick:       false,
     careMistakes: 0,
+    gamePlayedCount1: 0,
+    gamePlayedCount2: 0,
+    gamePlayedCount3: 0,
     activeCareRequest: null,
     careRequestDeadline: null,
     nextCareRequestAt: null,
     catchUpCareQueue: [],
     mood:       3, // 0 = run away, 1 = unhappy, 2 = neutral, 3 = happy
     age:        0,
+    stageStartedAtAge: 0,
     stage:      null,
     alive:      false,
     idle:       true,
@@ -950,13 +1029,22 @@ const loadFromLocalstorage = () => {
         return;
     }
 
-    try {
+        try {
         pet = JSON.parse(petState);
     } catch (error) {
         console.error('Bad petState in localStorage:', petState);
         localStorage.removeItem('petState');
         return;
     }
+
+    // Protect older save files that don't contain game counters.
+    pet.gamePlayedCount1 = Number(pet.gamePlayedCount1) || 0;
+
+    pet.gamePlayedCount2 = Number(pet.gamePlayedCount2) || 0;
+
+    pet.gamePlayedCount3 = Number(pet.gamePlayedCount3) || 0;
+
+    pet.stageStartedAtAge = Number(pet.stageStartedAtAge) || 0;
 
     // restore the species object from the saved data
     const restoredSpecies = getCanonicalSpecies(pet.species);
@@ -976,7 +1064,6 @@ const loadFromLocalstorage = () => {
     updateSprite();
     catchUpGameState();
     initializeCareRequestSystem();
-    checkEvolution();
     updateUI();
 };
 
@@ -999,7 +1086,6 @@ const catchUpGameState = () => {
     if (catchUpSeconds <= 0) return;
 
     pet.age += catchUpSeconds;
-    checkEvolution();
 
     pet.hunger -= Math.floor(catchUpSeconds / 300);
     pet.energy -= Math.floor(catchUpSeconds / 180);
@@ -1013,7 +1099,7 @@ const catchUpGameState = () => {
     pet.catchUpCareQueue = Array.isArray(pet.catchUpCareQueue)
         ? pet.catchUpCareQueue.filter(
             (requestType, index, queue) =>
-                CARE_REQUEST_TYPES.includes(requestType) &&
+                careRequestTypes.includes(requestType) &&
                 queue.indexOf(requestType) === index
         )
         : [];
@@ -1021,31 +1107,42 @@ const catchUpGameState = () => {
     let expiredOfflineRequestType = null;
 
     if (
-        CARE_REQUEST_TYPES.includes(pet.activeCareRequest)
+        careRequestTypes.includes(pet.activeCareRequest)
     ) {
-        if (
-            timeDifference >=
-            OFFLINE_CARE_REQUEST_MAX_AGE_MS
-        ) {
-            expiredOfflineRequestType =
-                pet.activeCareRequest;
+        const savedDeadline =
+        Number(pet.careRequestDeadline);
 
-            pet.careMistakes += 1;
+        const hasValidDeadline =
+        Number.isFinite(savedDeadline) &&
+        savedDeadline > 0;
 
-            logEntry(
-                `Care mistake #${pet.careMistakes}: ` +
-                `${pet.name}'s ${expiredOfflineRequestType} request expired while offline.`
-            );
+    // The request expired while the game was closed.
+    if (
+        hasValidDeadline &&
+        currentTime >= savedDeadline
+    ) {
+        expiredOfflineRequestType =
+            pet.activeCareRequest;
 
-            clearActiveCareRequest();
-        } else {
+        pet.careMistakes += 1;
+
+        logEntry(
+            `Care mistake #${pet.careMistakes}: ` +
+            `${pet.name}'s ${expiredOfflineRequestType} request expired while offline.`
+        );
+
+        clearActiveCareRequest();
+    } else {
+        // Keep original deadline if it hasn't expired
+        if (!hasValidDeadline) {
             pet.careRequestDeadline =
-                currentTime + CARE_RESPONSE_TIME_MS;
-
-            syncCareRequestFlags();
-            updateAlerts();
+                currentTime + careResponseTime;
         }
+
+        syncCareRequestFlags();
+        updateAlerts();
     }
+}
 
     if (expiredOfflineRequestType) {
         pet.catchUpCareQueue =
@@ -1085,7 +1182,7 @@ const catchUpGameState = () => {
         .filter(
             (need) =>
                 need.value <=
-                    CARE_PRIORITY_THRESHOLD &&
+                    carePriority &&
                 need.requestType !==
                     expiredOfflineRequestType &&
                 !queuedRequestTypes.has(
@@ -1122,6 +1219,8 @@ const catchUpGameState = () => {
             currentTime
         );
     }
+
+    checkEvolution();
 
     updateTime();
     updateUI();
@@ -1203,12 +1302,16 @@ const newPet = () => {
         dirty:      false,
         sick:       false,
         careMistakes: 0,
+        gamePlayedCount1: 0,
+        gamePlayedCount2: 0,
+        gamePlayedCount3: 0,
         activeCareRequest: null,
         careRequestDeadline: null,
         nextCareRequestAt: null,
         catchUpCareQueue: [],
         mood:       3,
         age:        0,
+        stageStartedAtAge: 0,
         stage:      null,
         alive:      true,
         idle:       true,
@@ -1224,12 +1327,10 @@ const newPet = () => {
 ========================= */
 
 const getRandomCareDelay = () => {
-    const delayRange =
-        CARE_REQUEST_MAX_DELAY_MS -
-        CARE_REQUEST_MIN_DELAY_MS;
+    const delayRange = careDelayMax - careDelayMin;
 
     return (
-        CARE_REQUEST_MIN_DELAY_MS +
+        careDelayMin +
         Math.floor(Math.random() * (delayRange + 1))
     );
 };
@@ -1272,7 +1373,7 @@ const chooseCareRequestType = (
     requestedType = null
 ) => {
     // Debug commands can still force a specific request.
-    if (CARE_REQUEST_TYPES.includes(requestedType)) {
+    if (careRequestTypes.includes(requestedType)) {
         return requestedType;
     }
 
@@ -1293,7 +1394,7 @@ const chooseCareRequestType = (
 
     const lowCareNeeds = careNeeds.filter(
         (need) =>
-            need.value <= CARE_PRIORITY_THRESHOLD
+            need.value <= carePriority
     );
 
     /*
@@ -1322,10 +1423,10 @@ const chooseCareRequestType = (
     }
 
     // All bars are safe, so use a normal random request.
-    return CARE_REQUEST_TYPES[
+    return careRequestTypes[
         Math.floor(
             Math.random() *
-            CARE_REQUEST_TYPES.length
+            careRequestTypes.length
         )
     ];
 };
@@ -1345,7 +1446,7 @@ const startCareRequest = (
     pet.activeCareRequest = requestType;
 
     pet.careRequestDeadline =
-        Date.now() + CARE_RESPONSE_TIME_MS;
+        Date.now() + careResponseTime;
 
     pet.nextCareRequestAt = null;
 
@@ -1358,6 +1459,7 @@ const startCareRequest = (
         `Respond within 5 minutes.`
     );
 
+    saveToLocalStorage();
     return true;
 };
 
@@ -1376,16 +1478,16 @@ const registerCareMistake = (now = Date.now()) => {
         `${pet.name}'s ${missedRequest} request was ignored.`
     );
 
-    // Removes the request and hides its bubble.
+    // Remove request and hide its bubble
     clearActiveCareRequest();
 
-    // Starts the random wait for the next request.
+    // Start random wait for next request
     if (
         Array.isArray(pet.catchUpCareQueue) &&
         pet.catchUpCareQueue.length > 0
     ) {
         pet.nextCareRequestAt =
-            now + CATCH_UP_REQUEST_DELAY_MS;
+            now + catchUpDelay;
     } else {
         scheduleNextCareRequest(now);
     }
@@ -1409,12 +1511,13 @@ const completeCareRequest = (
         pet.catchUpCareQueue.length > 0
     ) {
         pet.nextCareRequestAt =
-            Date.now() + CATCH_UP_REQUEST_DELAY_MS;
+            Date.now() + catchUpDelay;
     } else {
         scheduleNextCareRequest();
     }
 
     updateAlerts();
+    saveToLocalStorage();
 
     return true;
 };
@@ -1460,7 +1563,7 @@ const initializeCareRequestSystem = () => {
     )
         ? pet.catchUpCareQueue.filter(
             (requestType, index, queue) =>
-                CARE_REQUEST_TYPES.includes(requestType) &&
+                careRequestTypes.includes(requestType) &&
                 queue.indexOf(requestType) === index
         )
         : [];
@@ -1474,7 +1577,7 @@ const initializeCareRequestSystem = () => {
 
     // Protect against old save files
     if (
-        !CARE_REQUEST_TYPES.includes(
+        !careRequestTypes.includes(
             pet.activeCareRequest
         )
     ) {
@@ -1492,7 +1595,7 @@ const initializeCareRequestSystem = () => {
             Number.isFinite(savedDeadline) &&
             savedDeadline > 0
                 ? savedDeadline
-                : now + CARE_RESPONSE_TIME_MS;
+                : now + careResponseTime;
 
         syncCareRequestFlags();
 
@@ -1591,15 +1694,15 @@ const updateMood = () => {
     } else if (pet.hunger < 20 || pet.energy < 20 || pet.hygene < 20) {
         pet.mood = 1;
         pet.anim = 'unhappy';
-        console.log('pet is unhappy');
+        //console.log('pet is unhappy');
     } else if (pet.hunger < 50 || pet.energy < 50 || pet.hygene < 50) {
         pet.mood = 2;
         pet.anim = 'idle';
-        console.log('pet is neutral');
+        //console.log('pet is neutral');
     } else {
         pet.mood = 3;
         pet.anim = 'happy';
-        console.log('pet is happy');
+        //console.log('pet is happy');
     }
 }
 
@@ -2166,7 +2269,8 @@ const game2Left = () => {
 
 const game2Center = () => {
     updateMiniGameStatus('game2', 'Game 2: center button pressed.');
-    gamePlayedCount2 += 1; // remove later
+    pet.gamePlayedCount2 += 1; // remove later
+    saveToLocalStorage();
 };
 
 const game2Right = () => {
@@ -2179,7 +2283,8 @@ const game3Left = () => {
 
 const game3Center = () => {
     updateMiniGameStatus('game3', 'Game 3: center button pressed.');
-    gamePlayedCount3 += 1; // remove later
+    pet.gamePlayedCount3 += 1; // remove later
+    saveToLocalStorage();
 };
 
 const game3Right = () => {
@@ -2340,7 +2445,8 @@ function endGame1() {
     updateGame1Hud();
     logEntry(`Block Drop ended with a score of ${game1CurrentScore}.`);
     game1ScoreCheck();
-    gamePlayedCount1 += 1;
+    pet.gamePlayedCount1 += 1;
+    saveToLocalStorage();
 }
 
 function game1Loop(timestamp) {
@@ -2844,10 +2950,11 @@ document.addEventListener('mouseup', () => {
 const init = () => {
     tick = 0;
 
-    loadFromLocalstorage();
-
+    // Restore old log entries before catch-up adds new ones
     logWindow.innerHTML =
         localStorage.getItem('eventLog') || '';
+
+    loadFromLocalstorage();
 
     prepareGame1Menu();
 
