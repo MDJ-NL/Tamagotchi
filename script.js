@@ -46,7 +46,7 @@ const screenNames = {
     games: 'Mini-games',
     game1: 'Block Drop',
     game2: 'Game 2',
-    game3: 'Game 3'
+    game3: 'Memory Sequence'
 };
 
 // Top-level menu order: Care <- Home -> Mini-games
@@ -122,12 +122,30 @@ let game1FallingBlocks = [];
 
 let game2Active = false;
 
- /* ===========================
-    minigame 3 declarations - rock paper scissors
-============================ */
-let game3Options = ["Rock", "Paper", "Scissors"];
+/* ===========================
+    minigame 3 declarations - memory sequence
+=========================== */
 
 let game3Active = false;
+let game3ShowingSequence = false;
+
+let game3Sequence = [];
+let game3PlayerIndex = 0;
+
+let game3Score = 0;
+let game3HighScore = Number(localStorage.getItem('game3HighScore')) || 0;
+
+let game3Timer = null;
+
+const game3StartLength = 2;
+const game3MaxLength = 15;
+const game3FlashGap = 200;
+
+const game3Inputs = [
+    '◀',
+    '●',
+    '▶'
+];
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
@@ -1974,7 +1992,7 @@ const createSelectedPet = () => {
     togglePetSelect();
     updateUI();
 
-    logEntry(`New pet selected, ${pet.name} (${pet.species})`);
+    logEntry(`New pet selected: ${pet.name}`);
 };
 
 function gameLoop() {
@@ -2178,7 +2196,7 @@ const cleanPet = () => {
 
 let selectedGame = 0;
 
-const gameNames = ['Block Drop', 'Game 2', 'Game 3'];
+const gameNames = ['Block Drop', 'Game 2', 'Memory Sequence'];
 
 const renderGameSelection = () => {
     gameCards.forEach((card, index) => {
@@ -2209,7 +2227,7 @@ const launchMiniGame = (gameIndex, gameName) => {
 
 const launchGame1 = () => launchMiniGame(0, 'Block Drop');
 const launchGame2 = () => launchMiniGame(1, 'Game 2');
-const launchGame3 = () => launchMiniGame(2, 'Game 3');
+const launchGame3 = () => launchMiniGame(2, 'Memory Sequence');
 
 const launchSelectedGame = () => {
     const gameLaunchers = [
@@ -2278,17 +2296,15 @@ const game2Right = () => {
 };
 
 const game3Left = () => {
-    updateMiniGameStatus('game3', 'Game 3: left button pressed.');
+    handleGame3Input(0);
 };
 
 const game3Center = () => {
-    updateMiniGameStatus('game3', 'Game 3: center button pressed.');
-    pet.gamePlayedCount3 += 1; // remove later
-    saveToLocalStorage();
+    handleGame3Input(1);
 };
 
 const game3Right = () => {
-    updateMiniGameStatus('game3', 'Game 3: right button pressed.');
+    handleGame3Input(2);
 };
 
 const miniGameButtonActions = {
@@ -2303,9 +2319,9 @@ const miniGameButtonActions = {
         right: { label: 'Game 2 right action', onPress: game2Right }
     },
     game3: {
-        left: { label: 'Game 3 left action', onPress: game3Left },
-        center: { label: 'Game 3 center action', onPress: game3Center },
-        right: { label: 'Game 3 right action', onPress: game3Right }
+        left: { label: 'Memory input: left', onPress: game3Left },
+        center: { label: 'Start game or memory input: center', onPress: game3Center },
+        right: { label: 'Memory input: right', onPress: game3Right }
     }
 };
 
@@ -2512,7 +2528,248 @@ function game1ScoreCheck() {
 // game 2
 
 
-// game 3 - rock paper scissors
+// game 3 - memory sequence
+
+function getRandomGame3Input() {
+    return Math.floor(
+        Math.random() * game3Inputs.length
+    );
+}
+
+function getGame3FlashTime() {
+    /*
+        Sequence becomes slightly faster
+        as the player's score increases.
+    */
+    return Math.max(
+        350,
+        700 - game3Score * 40
+    );
+}
+
+function clearGame3Timer() {
+    if (game3Timer !== null) {
+        clearTimeout(game3Timer);
+        game3Timer = null;
+    }
+}
+
+function prepareGame3Menu() {
+    clearGame3Timer();
+
+    game3Active = false;
+    game3ShowingSequence = false;
+
+    game3Sequence = [];
+    game3PlayerIndex = 0;
+    game3Score = 0;
+
+    updateMiniGameStatus(
+        'game3',
+        `Memory Sequence — Best: ${game3HighScore}. ` +
+        `Press center to start.`
+    );
+}
+
+function startGame3() {
+    clearGame3Timer();
+
+    game3Active = true;
+    game3ShowingSequence = false;
+
+    game3Sequence = [];
+    game3PlayerIndex = 0;
+    game3Score = 0;
+
+    for (
+        let i = 0;
+        i < game3StartLength;
+        i++
+    ) {
+        game3Sequence.push(
+            getRandomGame3Input()
+        );
+    }
+
+    updateMiniGameStatus(
+        'game3',
+        'Get ready...'
+    );
+
+    game3Timer = setTimeout(
+        showGame3Sequence,
+        700
+    );
+}
+
+function showGame3Sequence() {
+    if (!game3Active) return;
+
+    clearGame3Timer();
+
+    game3ShowingSequence = true;
+    game3PlayerIndex = 0;
+
+    let sequenceIndex = 0;
+
+    const showNextInput = () => {
+        if (!game3Active) return;
+
+        if (
+            sequenceIndex >=
+            game3Sequence.length
+        ) {
+            game3ShowingSequence = false;
+
+            updateMiniGameStatus(
+                'game3',
+                `Your turn — 0/${game3Sequence.length} ` +
+                `| Score: ${game3Score}`
+            );
+
+            return;
+        }
+
+        const input =
+            game3Sequence[sequenceIndex];
+
+        updateMiniGameStatus(
+            'game3',
+            `Watch: ${game3Inputs[input]}`
+        );
+
+        game3Timer = setTimeout(
+            () => {
+                updateMiniGameStatus(
+                    'game3',
+                    '•'
+                );
+
+                game3Timer = setTimeout(
+                    () => {
+                        sequenceIndex++;
+                        showNextInput();
+                    },
+                    game3FlashGap
+                );
+            },
+            getGame3FlashTime()
+        );
+    };
+
+    showNextInput();
+}
+
+function handleGame3Input(input) {
+    /*
+        Center starts the game when there
+        is no active run.
+    */
+    if (!game3Active) {
+        if (input === 1) {
+            startGame3();
+        }
+
+        return;
+    }
+
+    // Ignore input while displaying sequence.
+    if (game3ShowingSequence) {
+        return;
+    }
+
+    const expectedInput =
+        game3Sequence[game3PlayerIndex];
+
+    if (input !== expectedInput) {
+        endGame3(false);
+        return;
+    }
+
+    game3PlayerIndex++;
+
+    /*
+        Player has correctly repeated the
+        entire current sequence.
+    */
+    if (
+        game3PlayerIndex >=
+        game3Sequence.length
+    ) {
+        game3Score++;
+
+        /*
+            Maximum sequence completed.
+        */
+        if (
+            game3Sequence.length >=
+            game3MaxLength
+        ) {
+            endGame3(true);
+            return;
+        }
+
+        // Add one new step for the next round.
+        game3Sequence.push(
+            getRandomGame3Input()
+        );
+
+        updateMiniGameStatus(
+            'game3',
+            `Correct! Score: ${game3Score}`
+        );
+
+        game3Timer = setTimeout(
+            showGame3Sequence,
+            800
+        );
+
+        return;
+    }
+
+    updateMiniGameStatus(
+        'game3',
+        `Correct — ${game3PlayerIndex}/${game3Sequence.length} ` +
+        `| Score: ${game3Score}`
+    );
+}
+
+function endGame3(completed = false) {
+    clearGame3Timer();
+
+    game3Active = false;
+    game3ShowingSequence = false;
+
+    if (game3Score > game3HighScore) {
+        game3HighScore = game3Score;
+
+        localStorage.setItem(
+            'game3HighScore',
+            game3HighScore
+        );
+    }
+
+    // completed run counter
+    pet.gamePlayedCount3 += 1;
+
+    saveToLocalStorage();
+
+    if (completed) {
+        updateMiniGameStatus(
+            'game3',
+            `Perfect! Score: ${game3Score} ` +
+            `| Best: ${game3HighScore}. ` +
+            `Press center to play again.`
+        );
+    } else {
+        updateMiniGameStatus(
+            'game3',
+            `Wrong! Score: ${game3Score} ` +
+            `| Best: ${game3HighScore}. ` +
+            `Press center to play again.`
+        );
+    }
+}
 
 
 /* =============================
@@ -2768,8 +3025,18 @@ const setScreen = (screenName) => {
 
     const previousScreen = activeScreen;
 
-    if (previousScreen === 'game1' && screenName !== 'game1') {
+    if (
+        previousScreen === 'game1' &&
+        screenName !== 'game1'
+    ) {
         prepareGame1Menu();
+    }
+
+    if (
+        previousScreen === 'game3' &&
+        screenName !== 'game3'
+    ) {
+        prepareGame3Menu();
     }
 
     activeScreen = screenName;
@@ -2798,7 +3065,11 @@ const setScreen = (screenName) => {
     if (activeScreen === 'game1') {
         prepareGame1Menu();
     }
-};
+
+    if (activeScreen === 'game3') {
+        prepareGame3Menu();
+    }
+}
 
 const activateCenterButton = () => {
     document.getElementById('MainselectButton')?.click();
