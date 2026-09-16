@@ -119,8 +119,21 @@ let game1FallingBlocks = [];
 /* ============================
     minigame 2 declarations
 ============================ */
+const game2Window = document.getElementById('game2Container');
+const game2MainMenu = document.getElementById('game2MainMenu');
+const game2Playfield = document.getElementById('game2Playfield');
+const game2ScoreDisplay = document.getElementById('game2Score');
+const game2MissesDisplay = document.getElementById('game2Misses');
+const game2HighScoreDisplay = document.getElementById('game2HighScore');
+const game2GameOver = document.getElementById('game2GameOver');
+const game2FinalScore = document.getElementById('game2FinalScore');
 
 let game2Active = false;
+let game2CurrentScore = 0;
+let game2HighScore = Number(localStorage.getItem('game2HighScore')) || 0;
+let game2Misses = 0;
+let game2CupPositions = [0, 1, 2];
+let game2BallPosition = 0;
 
  /* ===========================
     minigame 3 declarations - rock paper scissors
@@ -2264,17 +2277,18 @@ const game1Right = () => {
 };
 
 const game2Left = () => {
-    updateMiniGameStatus('game2', 'Game 2: left button pressed.');
+   if (!game2Active) {  return; }
 };
 
 const game2Center = () => {
-    updateMiniGameStatus('game2', 'Game 2: center button pressed.');
-    pet.gamePlayedCount2 += 1; // remove later
-    saveToLocalStorage();
+   if (!game2Active) {
+        startGame2();
+        console.log('Game 2 started.');
+    }
 };
 
 const game2Right = () => {
-    updateMiniGameStatus('game2', 'Game 2: right button pressed.');
+    if (!game2Active) {  return; }
 };
 
 const game3Left = () => {
@@ -2298,9 +2312,9 @@ const miniGameButtonActions = {
         right: { label: 'Move catcher right', onPress: game1Right }
     },
     game2: {
-        left: { label: 'Game 2 left action', onPress: game2Left },
-        center: { label: 'Game 2 center action', onPress: game2Center },
-        right: { label: 'Game 2 right action', onPress: game2Right }
+        left: { label: 'Game 2 choose left cup', onPress: game2Left },
+        center: { label: 'Game 2 choose center cup', onPress: game2Center },
+        right: { label: 'Game 2 choose right cup', onPress: game2Right }
     },
     game3: {
         left: { label: 'Game 3 left action', onPress: game3Left },
@@ -2509,8 +2523,55 @@ function game1ScoreCheck() {
     }
 }
 
-// game 2
+// game 2 (what cup is it under)
+const GAME2_MAX_MISSES = 3;
+const GAME2_CUP_COUNT = 3;
 
+function startGame2() {
+    // stopGame1Loop();
+    // clearGame1Blocks();
+
+    // game1CurrentScore = 0;
+    // game1Misses = 0;
+    // game1PlayerLane = 1;
+    // game1SpawnTimer = 0;
+    // game1LastFrameTime = 0;
+    // game1Active = true;
+
+    // game1MainMenu.classList.add('noDisplay');
+    // game1Window.classList.remove('noDisplay');
+    // game1GameOver.classList.add('noDisplay');
+
+    // updateGame1Hud();
+    // setGame1PlayerLane();
+
+    // game1AnimationFrame = requestAnimationFrame(game1Loop);
+    // logEntry('Block Drop started.');
+
+    
+}
+
+
+function updateGame2Hud() {
+    game2ScoreDisplay.textContent = game2CurrentScore;
+    game2MissesDisplay.textContent = game2Misses;
+    game2HighScoreDisplay.textContent = game2HighScore;
+}
+
+function addBallToRandomCup() {
+    game2BallPosition = Math.floor(Math.random() * game2CupPositions.length);
+
+    //animate the ball being placed under the cup
+}
+
+function shuffleCups(){
+    //two cups swap positions, the ball may or may not be under one of them
+    GAME2_CUP_COUNT[0] = game2CupPositions[0];
+    GAME2_CUP_COUNT[1] = game2CupPositions[1];
+    GAME2_CUP_COUNT[2] = game2CupPositions[2];
+
+    
+}
 
 // game 3 - rock paper scissors
 
