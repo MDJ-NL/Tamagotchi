@@ -127,6 +127,10 @@ const game2MissesDisplay = document.getElementById('game2Misses');
 const game2HighScoreDisplay = document.getElementById('game2HighScore');
 const game2GameOver = document.getElementById('game2GameOver');
 const game2FinalScore = document.getElementById('game2FinalScore');
+const game2CupOne = document.getElementById('cupOne');
+const game2CupTwo = document.getElementById('cupTwo');
+const game2CupThree = document.getElementById('cupThree');
+const game2Cups = [game2CupOne, game2CupTwo, game2CupThree];    
 
 let game2Active = false;
 let game2CurrentScore = 0;
@@ -2551,6 +2555,7 @@ function updateGame2Hud() {
 
 function addBallToRandomCup() {
     game2BallPosition = Math.floor(Math.random() * game2CupPositions.length);
+    game2Cups[game2BallPosition].classList.add('hasBall');
 
     //animate the ball being placed under the cup
 }
@@ -2558,6 +2563,10 @@ function addBallToRandomCup() {
 function shuffleCups(){
     //two cups swap positions, the ball may or may not be under one of them
     game2CupPositions = Math.floor(Math.random() * game2CupPositions.length);
+    for (let i = 0; i < game2Cups.length; i++){
+        
+    }
+
     
 }
 
