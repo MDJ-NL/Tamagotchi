@@ -1,6 +1,6 @@
-/* ==================
+/* ================
     Debug commands
-================== 
+===================
 
     Set care values
 pet.hunger = 10;
@@ -21,6 +21,12 @@ debugCareRequest('random');
 pet.gamePlayedCount1 = 6;
 pet.gamePlayedCount2 = 0;
 pet.gamePlayedCount3 = 0;
+
+    forward time, change first number (hours)
+pet.age += 24 * 60 * 60; checkEvolution(); updateUI(); saveToLocalStorage();
+
+    test death
+localStorage.setItem('savedDate', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)); catchUpGameState();
 
 
 ================================
@@ -133,12 +139,13 @@ let game3Sequence = [];
 let game3PlayerIndex = 0;
 
 let game3Score = 0;
-let game3HighScore = Number(localStorage.getItem('game3HighScore')) || 0;
+let game3HighScore =
+    Number(localStorage.getItem('game3HighScore')) || 0;
 
 let game3Timer = null;
 
 const game3StartLength = 2;
-const game3MaxLength = 15;
+const game3MaxLength = 12;
 const game3FlashGap = 200;
 
 const game3Inputs = [
@@ -146,6 +153,14 @@ const game3Inputs = [
     '●',
     '▶'
 ];
+
+const game3Prompt = document.getElementById('game3Prompt');
+const game3Icon = document.querySelector('#game3Status .game3Icon');
+
+function updateGame3Display(prompt, icon = '') {
+    game3Prompt.textContent = prompt;
+    game3Icon.textContent = icon;
+}
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
@@ -363,7 +378,7 @@ const petSpecies = {
     Evolution logic
 ==================== */
 
-const hour = 1 * 1; // 60 * 60;
+const hour = 60 * 60;
 
 // Default fallback until an egg is selected or a save is loaded.
 let currentSpecies = null;
@@ -1104,6 +1119,22 @@ const catchUpGameState = () => {
     if (catchUpSeconds <= 0) return;
 
     pet.age += catchUpSeconds;
+
+    // Pet dies if offline for 1 week
+    const offlineDeathTime = 7 * 24 * 60 * 60;
+
+    if (catchUpSeconds >= offlineDeathTime) {
+        pet.hunger = 0;
+        pet.energy = 0;
+        pet.hygene = 0;
+
+        logEntry(`${pet.name} was left alone for too long.`);
+
+        startDeathAnimation();
+        saveToLocalStorage();
+
+        return;
+    }
 
     pet.hunger -= Math.floor(catchUpSeconds / 300);
     pet.energy -= Math.floor(catchUpSeconds / 180);
@@ -2436,7 +2467,7 @@ function catchGame1Block(index) {
 
 function missGame1Block(index) {
     const [block] = game1FallingBlocks.splice(index, 1);
-    block.element.remove();game1Playfield
+    block.element.remove();
 
     game1Misses += 1;
     updateGame1Hud();
@@ -2564,11 +2595,7 @@ function prepareGame3Menu() {
     game3PlayerIndex = 0;
     game3Score = 0;
 
-    updateMiniGameStatus(
-        'game3',
-        `Memory Sequence — Best: ${game3HighScore}. ` +
-        `Press center to start.`
-    );
+    updateGame3Display(`Memory Sequence — Best: ${game3HighScore}. Press ● to start.`);
 }
 
 function startGame3() {
@@ -2591,10 +2618,7 @@ function startGame3() {
         );
     }
 
-    updateMiniGameStatus(
-        'game3',
-        'Get ready...'
-    );
+    updateGame3Display('GET READY');
 
     game3Timer = setTimeout(
         showGame3Sequence,
@@ -2621,11 +2645,10 @@ function showGame3Sequence() {
         ) {
             game3ShowingSequence = false;
 
-            updateMiniGameStatus(
-                'game3',
-                `Your turn — 0/${game3Sequence.length} ` +
-                `| Score: ${game3Score}`
-            );
+            game3Prompt.textContent =
+                `REPEAT — Score: ${game3Score}`;
+
+            game3Icon.textContent = '';
 
             return;
         }
@@ -2633,17 +2656,12 @@ function showGame3Sequence() {
         const input =
             game3Sequence[sequenceIndex];
 
-        updateMiniGameStatus(
-            'game3',
-            `Watch: ${game3Inputs[input]}`
-        );
+        game3Prompt.textContent = 'MEMORIZE';
+        game3Icon.textContent = game3Inputs[input];
 
         game3Timer = setTimeout(
             () => {
-                updateMiniGameStatus(
-                    'game3',
-                    '•'
-                );
+                game3Icon.textContent = '';
 
                 game3Timer = setTimeout(
                     () => {
@@ -2661,10 +2679,7 @@ function showGame3Sequence() {
 }
 
 function handleGame3Input(input) {
-    /*
-        Center starts the game when there
-        is no active run.
-    */
+    // Center starts the game when there is no active run.
     if (!game3Active) {
         if (input === 1) {
             startGame3();
@@ -2688,19 +2703,14 @@ function handleGame3Input(input) {
 
     game3PlayerIndex++;
 
-    /*
-        Player has correctly repeated the
-        entire current sequence.
-    */
+    // Player has correctly repeated the entire current sequence.
     if (
         game3PlayerIndex >=
         game3Sequence.length
     ) {
         game3Score++;
 
-        /*
-            Maximum sequence completed.
-        */
+        // Maximum sequence completed
         if (
             game3Sequence.length >=
             game3MaxLength
@@ -2709,15 +2719,9 @@ function handleGame3Input(input) {
             return;
         }
 
-        // Add one new step for the next round.
-        game3Sequence.push(
-            getRandomGame3Input()
-        );
+        game3Sequence.push(getRandomGame3Input());
 
-        updateMiniGameStatus(
-            'game3',
-            `Correct! Score: ${game3Score}`
-        );
+        updateGame3Display(`CORRECT! — Score: ${game3Score}`);
 
         game3Timer = setTimeout(
             showGame3Sequence,
@@ -2727,11 +2731,7 @@ function handleGame3Input(input) {
         return;
     }
 
-    updateMiniGameStatus(
-        'game3',
-        `Correct — ${game3PlayerIndex}/${game3Sequence.length} ` +
-        `| Score: ${game3Score}`
-    );
+    updateGame3Display(`REPEAT — ${game3PlayerIndex}/${game3Sequence.length} | Score: ${game3Score}`);
 }
 
 function endGame3(completed = false) {
@@ -2755,18 +2755,12 @@ function endGame3(completed = false) {
     saveToLocalStorage();
 
     if (completed) {
-        updateMiniGameStatus(
-            'game3',
-            `Perfect! Score: ${game3Score} ` +
-            `| Best: ${game3HighScore}. ` +
-            `Press center to play again.`
+        updateGame3Display(
+            `Perfect! Score: ${game3Score} | Best: ${game3HighScore}. Press ● to play again.`
         );
     } else {
-        updateMiniGameStatus(
-            'game3',
-            `Wrong! Score: ${game3Score} ` +
-            `| Best: ${game3HighScore}. ` +
-            `Press center to play again.`
+        updateGame3Display(
+            `Wrong! Score: ${game3Score} | Best: ${game3HighScore}. Press ● to play again.`
         );
     }
 }
