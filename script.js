@@ -133,6 +133,10 @@ const game2MissesDisplay = document.getElementById('game2Misses');
 const game2HighScoreDisplay = document.getElementById('game2HighScore');
 const game2GameOver = document.getElementById('game2GameOver');
 const game2FinalScore = document.getElementById('game2FinalScore');
+const game2CupOne = document.getElementById('cupOne');
+const game2CupTwo = document.getElementById('cupTwo');
+const game2CupThree = document.getElementById('cupThree');
+const game2Cups = [game2CupOne, game2CupTwo, game2CupThree];    
 
 let game2Active = false;
 let game2CurrentScore = 0;
@@ -2644,30 +2648,21 @@ function game1ScoreCheck() {
 
 // game 2 (what cup is it under)
 const GAME2_MAX_MISSES = 3;
-const GAME2_CUP_COUNT = 3;
+let GAME2_CUP_COUNT = 3;
 
 function startGame2() {
-    // stopGame1Loop();
-    // clearGame1Blocks();
 
-    // game1CurrentScore = 0;
-    // game1Misses = 0;
-    // game1PlayerLane = 1;
-    // game1SpawnTimer = 0;
-    // game1LastFrameTime = 0;
-    // game1Active = true;
+    game2MainMenu.classList.add('noDisplay');
+    game2Window.classList.remove('noDisplay');
+    game2GameOver.classList.add('noDisplay');
 
-    // game1MainMenu.classList.add('noDisplay');
-    // game1Window.classList.remove('noDisplay');
-    // game1GameOver.classList.add('noDisplay');
+    game2CurrentScore = 0;
+    game2Misses = 0;
+    game2Active = true;
+    addBallToRandomCup();
 
-    // updateGame1Hud();
-    // setGame1PlayerLane();
 
-    // game1AnimationFrame = requestAnimationFrame(game1Loop);
-    // logEntry('Block Drop started.');
-
-    
+    updateGame2Hud();
 }
 
 
@@ -2679,15 +2674,17 @@ function updateGame2Hud() {
 
 function addBallToRandomCup() {
     game2BallPosition = Math.floor(Math.random() * game2CupPositions.length);
+    game2Cups[game2BallPosition].classList.add('hasBall');
 
     //animate the ball being placed under the cup
 }
 
 function shuffleCups(){
     //two cups swap positions, the ball may or may not be under one of them
-    GAME2_CUP_COUNT[0] = game2CupPositions[0];
-    GAME2_CUP_COUNT[1] = game2CupPositions[1];
-    GAME2_CUP_COUNT[2] = game2CupPositions[2];
+    game2CupPositions = Math.floor(Math.random() * game2CupPositions.length);
+    for (let i = 0; i < game2Cups.length; i++){
+        
+    }
 
     
 }
