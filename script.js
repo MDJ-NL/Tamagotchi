@@ -686,6 +686,8 @@ let clock = '00:00'
 // animation values
 let animOverride = false; // used to prevent mood changes during action animations
 let animInterval = null;
+let deathAnimationRunning = false;
+let deathWaitingForInput = false;
 let deathFrame;
 
 /* =========================
@@ -754,6 +756,8 @@ const deathFrames = [
     [0, 2], // frame 5
     [1, 2]  // frame 6
 ];
+
+const deadSprite ="./assets/new sprites/death sprite.png";
 
 const clampNumber = (value, min, max) => {
     return Math.min(max, Math.max(min, value));
@@ -997,23 +1001,54 @@ const playDeathAnim = () => {
 };
 
 const startDeathAnimation = () => {
-    if (!pet.alive && deathFrame !== undefined) return;
+    if (
+        !pet.alive &&
+        deathFrame !== undefined
+    ) {
+        return;
+    }
 
     pet.alive = false;
     deathFrame = 1;
+
+    deathAnimationRunning = true;
+    deathWaitingForInput = false;
 
     clearInterval(animInterval);
     animInterval = null;
 
     updateSprite();
 
-    runner(deathFrames.length);
+    renderScreenButtons();
 
-    setTimeout(() => {
-        logEntry(`${pet.name} has died...`);
-        togglePetSelect();
-        setScreen('home');
-    }, 10000);
+    runner(
+        deathFrames.length,
+
+        () => {
+            showDeadSprite();
+
+            deathAnimationRunning = false;
+            deathWaitingForInput = true;
+
+            logEntry(
+                `${pet.name} has died...`
+            );
+
+            saveToLocalStorage();
+            renderScreenButtons();
+        }
+    );
+};
+
+const showDeadSprite = () => {
+    const cssSpritePath = toCssUrl(deadSprite);
+
+    for (let i = 0; i < petSprite.length; i++) {
+        petSprite[i].style.backgroundImage = cssSpritePath;
+        petSprite[i].style.backgroundSize = 'contain';
+        petSprite[i].style.backgroundPosition = 'center';
+        petSprite[i].style.backgroundRepeat = 'no-repeat';
+    }
 };
 
 let spriteResizeFrame = null;
@@ -1746,25 +1781,39 @@ window.debugCareRequest = (
 };
 
 const updateMood = () => {
+
+    const isEgg = currentSpecies === petSpecies.Eggs.Egg1 ||  currentSpecies === petSpecies.Eggs.Egg2;
+
     if (!pet.alive) return;
     if (animOverride) return;
 
-    if (pet.hunger == 0 || pet.energy == 0 || pet.hygene == 0) {
+    if (
+        pet.hunger == 0 ||
+        pet.energy == 0 ||
+        pet.hygene == 0
+    ) {
         pet.mood = 0;
         startDeathAnimation();
-        
-    } else if (pet.hunger < 20 || pet.energy < 20 || pet.hygene < 20) {
+
+    } else if (
+        pet.hunger < 20 ||
+        pet.energy < 20 ||
+        pet.hygene < 20
+    ) {
         pet.mood = 1;
-        pet.anim = 'unhappy';
-        //console.log('pet is unhappy');
-    } else if (pet.hunger < 50 || pet.energy < 50 || pet.hygene < 50) {
+        pet.anim = isEgg ? 'idle' : 'unhappy';
+
+    } else if (
+        pet.hunger < 50 ||
+        pet.energy < 50 ||
+        pet.hygene < 50
+    ) {
         pet.mood = 2;
         pet.anim = 'idle';
-        //console.log('pet is neutral');
+
     } else {
         pet.mood = 3;
-        pet.anim = 'happy';
-        //console.log('pet is happy');
+        pet.anim = isEgg ? 'idle' : 'happy';
     }
 }
 
@@ -1881,12 +1930,35 @@ const updateSprite = () => {
     }
 };
 
-function runner(repeats) {
-    if (repeats > 0) {
-        playDeathAnim();
-        setTimeout(() => runner(repeats - 1), 750);
+function runner(repeats, onComplete = null) {
+    if (repeats <= 0) {
+        if (onComplete) {
+            onComplete();
+        }
+
+        return;
     }
+
+    playDeathAnim();
+
+    setTimeout(
+        () => {
+            runner(
+                repeats - 1,
+                onComplete
+            );
+        },
+        750
+    );
 }
+
+const openEggMenuAfterDeath = () => {
+    if (!deathWaitingForInput) return;
+
+    deathWaitingForInput = false;
+
+    togglePetSelect();
+};
 
 const toggleLog = () => {
     if (logWindow.classList.contains('hidden')) {
@@ -2952,6 +3024,40 @@ const makeDeviceButton = ({
 };
 
 const getCurrentButtonActions = () => {
+    if (!pet.alive && deathAnimationRunning) {
+        return {
+            left: {
+                label: 'Death animation',
+                onPress: () => {}
+            },
+            center: {
+                label: 'Death animation',
+                onPress: () => {}
+            },
+            right: {
+                label: 'Death animation',
+                onPress: () => {}
+            }
+        };
+    }
+
+    if (!pet.alive && deathWaitingForInput) {
+        return {
+            left: {
+                label: 'Continue',
+                onPress: openEggMenuAfterDeath
+            },
+            center: {
+                label: 'Continue',
+                onPress: openEggMenuAfterDeath
+            },
+            right: {
+                label: 'Continue',
+                onPress: openEggMenuAfterDeath
+            }
+        };
+    }
+
     if (!pet.alive) {
         return {
             left: {
@@ -3142,16 +3248,38 @@ const handleKeyboardControls = (event) => {
     }
 
     if (!pet.alive) {
+        if (deathAnimationRunning) {
+            return;
+        }
+
+        if (deathWaitingForInput) {
+            if (
+                event.key === 'ArrowLeft' ||
+                event.key === 'ArrowRight' ||
+                event.key === 'Enter' ||
+                event.key === ' '
+            ) {
+                event.preventDefault();
+                openEggMenuAfterDeath();
+            }
+
+            return;
+        }
+
         if (event.key === 'ArrowLeft') {
             event.preventDefault();
             selectPreviousPet();
         } else if (event.key === 'ArrowRight') {
             event.preventDefault();
             selectNextPet();
-        } else if (event.key === 'Enter' || event.key === ' ') {
+        } else if (
+            event.key === 'Enter' ||
+            event.key === ' '
+        ) {
             event.preventDefault();
             createSelectedPet();
         }
+
         return;
     }
 
