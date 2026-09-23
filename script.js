@@ -1,6 +1,6 @@
-/* ==================
+/* ================
     Debug commands
-================== 
+===================
 
     Set care values
 pet.hunger = 10;
@@ -21,6 +21,12 @@ debugCareRequest('random');
 pet.gamePlayedCount1 = 6;
 pet.gamePlayedCount2 = 0;
 pet.gamePlayedCount3 = 0;
+
+    forward time, change first number (hours)
+pet.age += 24 * 60 * 60; checkEvolution(); updateUI(); saveToLocalStorage();
+
+    test death
+localStorage.setItem('savedDate', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)); catchUpGameState();
 
 
 ================================
@@ -46,7 +52,7 @@ const screenNames = {
     games: 'Mini-games',
     game1: 'Block Drop',
     game2: 'Game 2',
-    game3: 'Game 3'
+    game3: 'Memory Sequence'
 };
 
 // Top-level menu order: Care <- Home -> Mini-games
@@ -135,12 +141,39 @@ let game2Misses = 0;
 let game2CupPositions = [0, 1, 2];
 let game2BallPosition = 0;
 
- /* ===========================
-    minigame 3 declarations - rock paper scissors
-============================ */
-let game3Options = ["Rock", "Paper", "Scissors"];
+/* ===========================
+    minigame 3 declarations - memory sequence
+=========================== */
 
 let game3Active = false;
+let game3ShowingSequence = false;
+
+let game3Sequence = [];
+let game3PlayerIndex = 0;
+
+let game3Score = 0;
+let game3HighScore =
+    Number(localStorage.getItem('game3HighScore')) || 0;
+
+let game3Timer = null;
+
+const game3StartLength = 2;
+const game3MaxLength = 12;
+const game3FlashGap = 200;
+
+const game3Inputs = [
+    '◀',
+    '●',
+    '▶'
+];
+
+const game3Prompt = document.getElementById('game3Prompt');
+const game3Icon = document.querySelector('#game3Status .game3Icon');
+
+function updateGame3Display(prompt, icon = '') {
+    game3Prompt.textContent = prompt;
+    game3Icon.textContent = icon;
+}
 
 // status alerts
 const bubbleWrapper = document.getElementById('bubbleWrapper');
@@ -358,7 +391,7 @@ const petSpecies = {
     Evolution logic
 ==================== */
 
-const hour = 1 * 1; // 60 * 60;
+const hour = 60 * 60;
 
 // Default fallback until an egg is selected or a save is loaded.
 let currentSpecies = null;
@@ -1099,6 +1132,22 @@ const catchUpGameState = () => {
     if (catchUpSeconds <= 0) return;
 
     pet.age += catchUpSeconds;
+
+    // Pet dies if offline for 1 week
+    const offlineDeathTime = 7 * 24 * 60 * 60;
+
+    if (catchUpSeconds >= offlineDeathTime) {
+        pet.hunger = 0;
+        pet.energy = 0;
+        pet.hygene = 0;
+
+        logEntry(`${pet.name} was left alone for too long.`);
+
+        startDeathAnimation();
+        saveToLocalStorage();
+
+        return;
+    }
 
     pet.hunger -= Math.floor(catchUpSeconds / 300);
     pet.energy -= Math.floor(catchUpSeconds / 180);
@@ -1987,7 +2036,7 @@ const createSelectedPet = () => {
     togglePetSelect();
     updateUI();
 
-    logEntry(`New pet selected, ${pet.name} (${pet.species})`);
+    logEntry(`New pet selected: ${pet.name}`);
 };
 
 function gameLoop() {
@@ -2191,7 +2240,7 @@ const cleanPet = () => {
 
 let selectedGame = 0;
 
-const gameNames = ['Block Drop', 'Game 2', 'Game 3'];
+const gameNames = ['Block Drop', 'Game 2', 'Memory Sequence'];
 
 const renderGameSelection = () => {
     gameCards.forEach((card, index) => {
@@ -2222,7 +2271,7 @@ const launchMiniGame = (gameIndex, gameName) => {
 
 const launchGame1 = () => launchMiniGame(0, 'Block Drop');
 const launchGame2 = () => launchMiniGame(1, 'Game 2');
-const launchGame3 = () => launchMiniGame(2, 'Game 3');
+const launchGame3 = () => launchMiniGame(2, 'Memory Sequence');
 
 const launchSelectedGame = () => {
     const gameLaunchers = [
@@ -2292,17 +2341,15 @@ const game2Right = () => {
 };
 
 const game3Left = () => {
-    updateMiniGameStatus('game3', 'Game 3: left button pressed.');
+    handleGame3Input(0);
 };
 
 const game3Center = () => {
-    updateMiniGameStatus('game3', 'Game 3: center button pressed.');
-    pet.gamePlayedCount3 += 1; // remove later
-    saveToLocalStorage();
+    handleGame3Input(1);
 };
 
 const game3Right = () => {
-    updateMiniGameStatus('game3', 'Game 3: right button pressed.');
+    handleGame3Input(2);
 };
 
 const miniGameButtonActions = {
@@ -2317,9 +2364,9 @@ const miniGameButtonActions = {
         right: { label: 'Game 2 choose right cup', onPress: game2Right }
     },
     game3: {
-        left: { label: 'Game 3 left action', onPress: game3Left },
-        center: { label: 'Game 3 center action', onPress: game3Center },
-        right: { label: 'Game 3 right action', onPress: game3Right }
+        left: { label: 'Memory input: left', onPress: game3Left },
+        center: { label: 'Start game or memory input: center', onPress: game3Center },
+        right: { label: 'Memory input: right', onPress: game3Right }
     }
 };
 
@@ -2434,7 +2481,7 @@ function catchGame1Block(index) {
 
 function missGame1Block(index) {
     const [block] = game1FallingBlocks.splice(index, 1);
-    block.element.remove();game1Playfield
+    block.element.remove();
 
     game1Misses += 1;
     updateGame1Hud();
@@ -2573,7 +2620,211 @@ function shuffleCups(){
     
 }
 
-// game 3 - rock paper scissors
+// game 3 - memory sequence
+
+function getRandomGame3Input() {
+    return Math.floor(
+        Math.random() * game3Inputs.length
+    );
+}
+
+function getGame3FlashTime() {
+    /*
+        Sequence becomes slightly faster
+        as the player's score increases.
+    */
+    return Math.max(
+        350,
+        700 - game3Score * 40
+    );
+}
+
+function clearGame3Timer() {
+    if (game3Timer !== null) {
+        clearTimeout(game3Timer);
+        game3Timer = null;
+    }
+}
+
+function prepareGame3Menu() {
+    clearGame3Timer();
+
+    game3Active = false;
+    game3ShowingSequence = false;
+
+    game3Sequence = [];
+    game3PlayerIndex = 0;
+    game3Score = 0;
+
+    updateGame3Display(`Memory Sequence — Best: ${game3HighScore}. Press ● to start.`);
+}
+
+function startGame3() {
+    clearGame3Timer();
+
+    game3Active = true;
+    game3ShowingSequence = false;
+
+    game3Sequence = [];
+    game3PlayerIndex = 0;
+    game3Score = 0;
+
+    for (
+        let i = 0;
+        i < game3StartLength;
+        i++
+    ) {
+        game3Sequence.push(
+            getRandomGame3Input()
+        );
+    }
+
+    updateGame3Display('GET READY');
+
+    game3Timer = setTimeout(
+        showGame3Sequence,
+        700
+    );
+}
+
+function showGame3Sequence() {
+    if (!game3Active) return;
+
+    clearGame3Timer();
+
+    game3ShowingSequence = true;
+    game3PlayerIndex = 0;
+
+    let sequenceIndex = 0;
+
+    const showNextInput = () => {
+        if (!game3Active) return;
+
+        if (
+            sequenceIndex >=
+            game3Sequence.length
+        ) {
+            game3ShowingSequence = false;
+
+            game3Prompt.textContent =
+                `REPEAT — Score: ${game3Score}`;
+
+            game3Icon.textContent = '';
+
+            return;
+        }
+
+        const input =
+            game3Sequence[sequenceIndex];
+
+        game3Prompt.textContent = 'MEMORIZE';
+        game3Icon.textContent = game3Inputs[input];
+
+        game3Timer = setTimeout(
+            () => {
+                game3Icon.textContent = '';
+
+                game3Timer = setTimeout(
+                    () => {
+                        sequenceIndex++;
+                        showNextInput();
+                    },
+                    game3FlashGap
+                );
+            },
+            getGame3FlashTime()
+        );
+    };
+
+    showNextInput();
+}
+
+function handleGame3Input(input) {
+    // Center starts the game when there is no active run.
+    if (!game3Active) {
+        if (input === 1) {
+            startGame3();
+        }
+
+        return;
+    }
+
+    // Ignore input while displaying sequence.
+    if (game3ShowingSequence) {
+        return;
+    }
+
+    const expectedInput =
+        game3Sequence[game3PlayerIndex];
+
+    if (input !== expectedInput) {
+        endGame3(false);
+        return;
+    }
+
+    game3PlayerIndex++;
+
+    // Player has correctly repeated the entire current sequence.
+    if (
+        game3PlayerIndex >=
+        game3Sequence.length
+    ) {
+        game3Score++;
+
+        // Maximum sequence completed
+        if (
+            game3Sequence.length >=
+            game3MaxLength
+        ) {
+            endGame3(true);
+            return;
+        }
+
+        game3Sequence.push(getRandomGame3Input());
+
+        updateGame3Display(`CORRECT! — Score: ${game3Score}`);
+
+        game3Timer = setTimeout(
+            showGame3Sequence,
+            800
+        );
+
+        return;
+    }
+
+    updateGame3Display(`REPEAT — ${game3PlayerIndex}/${game3Sequence.length} | Score: ${game3Score}`);
+}
+
+function endGame3(completed = false) {
+    clearGame3Timer();
+
+    game3Active = false;
+    game3ShowingSequence = false;
+
+    if (game3Score > game3HighScore) {
+        game3HighScore = game3Score;
+
+        localStorage.setItem(
+            'game3HighScore',
+            game3HighScore
+        );
+    }
+
+    // completed run counter
+    pet.gamePlayedCount3 += 1;
+
+    saveToLocalStorage();
+
+    if (completed) {
+        updateGame3Display(
+            `Perfect! Score: ${game3Score} | Best: ${game3HighScore}. Press ● to play again.`
+        );
+    } else {
+        updateGame3Display(
+            `Wrong! Score: ${game3Score} | Best: ${game3HighScore}. Press ● to play again.`
+        );
+    }
+}
 
 
 /* =============================
@@ -2829,8 +3080,18 @@ const setScreen = (screenName) => {
 
     const previousScreen = activeScreen;
 
-    if (previousScreen === 'game1' && screenName !== 'game1') {
+    if (
+        previousScreen === 'game1' &&
+        screenName !== 'game1'
+    ) {
         prepareGame1Menu();
+    }
+
+    if (
+        previousScreen === 'game3' &&
+        screenName !== 'game3'
+    ) {
+        prepareGame3Menu();
     }
 
     activeScreen = screenName;
@@ -2859,7 +3120,11 @@ const setScreen = (screenName) => {
     if (activeScreen === 'game1') {
         prepareGame1Menu();
     }
-};
+
+    if (activeScreen === 'game3') {
+        prepareGame3Menu();
+    }
+}
 
 const activateCenterButton = () => {
     document.getElementById('MainselectButton')?.click();

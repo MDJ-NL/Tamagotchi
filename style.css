@@ -1023,6 +1023,40 @@ Block Drop mini-game
     right: -0.5vmin;
 }
 
+/* ==============================
+    Memory Sequence Mini-game
+============================== */
+
+#game3Status {
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+}
+
+#game3Status .game3Icon {
+    width: 100%;
+    height: clamp(60px, 10vmin, 110px);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: clamp(60px, 10vmin, 110px);
+    font-weight: bold;
+    line-height: 1;
+
+    text-align: center;
+    margin-top: 0.5vmin;
+}
+
+/* ===========
+    Mobile
+=========== */
 @media (max-width: 500px) {
     body{
         background-image: none;
