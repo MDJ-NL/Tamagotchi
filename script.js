@@ -51,7 +51,7 @@ const screenNames = {
     care: 'Care',
     games: 'Mini-games',
     game1: 'Block Drop',
-    game2: 'Game 2',
+    game2: 'Cup Shuffle',
     game3: 'Memory Sequence'
 };
 
@@ -123,7 +123,7 @@ let game1SpawnTimer = 0;
 let game1FallingBlocks = [];
 
 /* ============================
-    minigame 2 declarations
+    minigame 2 declarations - Cup Shuffle
 ============================ */
 const game2Window = document.getElementById('game2Container');
 const game2MainMenu = document.getElementById('game2MainMenu');
@@ -136,14 +136,17 @@ const game2FinalScore = document.getElementById('game2FinalScore');
 const game2CupOne = document.getElementById('cupOne');
 const game2CupTwo = document.getElementById('cupTwo');
 const game2CupThree = document.getElementById('cupThree');
-const game2Cups = [game2CupOne, game2CupTwo, game2CupThree];    
+const game2Cups = [game2CupOne, game2CupTwo, game2CupThree];
+const game2Ball = document.getElementById('game2Ball');
 
 let game2Active = false;
+let game2AcceptingGuess = false;
 let game2CurrentScore = 0;
 let game2HighScore = Number(localStorage.getItem('game2HighScore')) || 0;
 let game2Misses = 0;
 let game2CupPositions = [0, 1, 2];
-let game2BallPosition = 0;
+let game2BallCup = 0;
+let game2Timers = [];
 
 /* ===========================
     minigame 3 declarations - memory sequence
@@ -1768,12 +1771,6 @@ const updateCareRequestSystem = () => {
     }
 };
 
-// Debug command examples:
-// debugCareRequest('hungry')
-// debugCareRequest('tired')
-// debugCareRequest('dirty')
-// debugCareRequest('random')
-
 window.debugCareRequest = (
     requestType = 'random'
 ) => {
@@ -2316,7 +2313,7 @@ const cleanPet = () => {
 
 let selectedGame = 0;
 
-const gameNames = ['Block Drop', 'Game 2', 'Memory Sequence'];
+const gameNames = ['Block Drop', 'Cup Shuffle', 'Memory Sequence'];
 
 const renderGameSelection = () => {
     gameCards.forEach((card, index) => {
@@ -2346,7 +2343,7 @@ const launchMiniGame = (gameIndex, gameName) => {
 };
 
 const launchGame1 = () => launchMiniGame(0, 'Block Drop');
-const launchGame2 = () => launchMiniGame(1, 'Game 2');
+const launchGame2 = () => launchMiniGame(1, 'Cup Shuffle');
 const launchGame3 = () => launchMiniGame(2, 'Memory Sequence');
 
 const launchSelectedGame = () => {
@@ -2402,18 +2399,24 @@ const game1Right = () => {
 };
 
 const game2Left = () => {
-   if (!game2Active) {  return; }
+    if (!game2Active) return;
+
+    guessGame2Cup(0);
 };
 
 const game2Center = () => {
-   if (!game2Active) {
+    if (!game2Active) {
         startGame2();
-        console.log('Game 2 started.');
+        return;
     }
+
+    guessGame2Cup(1);
 };
 
 const game2Right = () => {
-    if (!game2Active) {  return; }
+    if (!game2Active) return;
+
+    guessGame2Cup(2);
 };
 
 const game3Left = () => {
@@ -2646,25 +2649,30 @@ function game1ScoreCheck() {
     }
 }
 
-// game 2 (what cup is it under)
+// game 2 - Cup Shuffle
 const GAME2_MAX_MISSES = 3;
-let GAME2_CUP_COUNT = 3;
+const GAME2_CUP_COUNT = 3;
+const GAME2_SLOT_CENTERS = [16.667, 50, 83.333];
 
-function startGame2() {
+function setGame2Timer(callback, delay) {
+    const timer = setTimeout(() => {
+        game2Timers = game2Timers.filter(
+            (savedTimer) =>
+                savedTimer !== timer
+        );
+        callback();
+    }, delay);
 
-    game2MainMenu.classList.add('noDisplay');
-    game2Window.classList.remove('noDisplay');
-    game2GameOver.classList.add('noDisplay');
-
-    game2CurrentScore = 0;
-    game2Misses = 0;
-    game2Active = true;
-    addBallToRandomCup();
-
-
-    updateGame2Hud();
+    game2Timers.push(timer);
+    return timer;
 }
 
+function clearGame2Timers() {
+    game2Timers.forEach(
+        (timer) => clearTimeout(timer)
+    );
+    game2Timers = [];
+}
 
 function updateGame2Hud() {
     game2ScoreDisplay.textContent = game2CurrentScore;
@@ -2672,21 +2680,224 @@ function updateGame2Hud() {
     game2HighScoreDisplay.textContent = game2HighScore;
 }
 
-function addBallToRandomCup() {
-    game2BallPosition = Math.floor(Math.random() * game2CupPositions.length);
-    game2Cups[game2BallPosition].classList.add('hasBall');
-
-    //animate the ball being placed under the cup
+function renderGame2CupPositions() {
+    for (
+        let cupIndex = 0;
+        cupIndex < GAME2_CUP_COUNT;
+        cupIndex++
+    ) {
+        const slot = game2CupPositions[cupIndex];
+        game2Cups[cupIndex].style.left = `${GAME2_SLOT_CENTERS[slot]}%`;
+    }
 }
 
-function shuffleCups(){
-    //two cups swap positions, the ball may or may not be under one of them
-    game2CupPositions = Math.floor(Math.random() * game2CupPositions.length);
-    for (let i = 0; i < game2Cups.length; i++){
-        
+function setGame2BallSlot(slot) {
+    game2Ball.style.left = `${GAME2_SLOT_CENTERS[slot]}%`;
+}
+
+function clearGame2RoundVisuals() {
+    game2Ball.classList.remove('visible');
+
+    for (const cup of game2Cups) {
+        cup.classList.remove(
+            'lifted',
+            'correct',
+            'wrong'
+        );
+    }
+}
+
+function prepareGame2Menu() {
+    clearGame2Timers();
+
+    game2Active = false;
+    game2AcceptingGuess = false;
+    game2CurrentScore = 0;
+    game2Misses = 0;
+    game2CupPositions = [0, 1, 2];
+
+    clearGame2RoundVisuals();
+    renderGame2CupPositions();
+
+    game2MainMenu.classList.remove('noDisplay');
+    game2Window.classList.add('noDisplay');
+    game2GameOver.classList.add('noDisplay');
+
+    updateMiniGameStatus(
+        'game2',
+        'Press center to start'
+    );
+
+    updateGame2Hud();
+}
+
+function startGame2() {
+    clearGame2Timers();
+
+    game2CurrentScore = 0;
+    game2Misses = 0;
+    game2CupPositions = [0, 1, 2];
+    game2Active = true;
+    game2AcceptingGuess = false;
+
+    game2MainMenu.classList.add('noDisplay');
+    game2Window.classList.remove('noDisplay');
+    game2GameOver.classList.add('noDisplay');
+
+    clearGame2RoundVisuals();
+    renderGame2CupPositions();
+    updateGame2Hud();
+
+    logEntry('Cup Shuffle started.');
+    setGame2Timer(startGame2Round, 350);
+}
+
+function startGame2Round() {
+    if (!game2Active) return;
+
+    clearGame2RoundVisuals();
+    game2AcceptingGuess = false;
+
+    // Select cup containing the ball
+    game2BallCup = Math.floor(Math.random() * GAME2_CUP_COUNT);
+
+    const ballSlot = game2CupPositions[game2BallCup];
+
+    setGame2BallSlot(ballSlot);
+
+    game2Cups[game2BallCup].classList.add('lifted');
+
+    game2Ball.classList.add('visible');
+
+    updateMiniGameStatus('game2', 'WATCH');
+
+    // preview where the ball is
+    setGame2Timer(() => {
+        game2Ball.classList.remove(
+            'visible'
+        );
+
+        game2Cups[
+            game2BallCup
+        ].classList.remove(
+            'lifted'
+        );
+
+        setGame2Timer(
+            shuffleCups,
+            300
+        );
+    }, 850);
+}
+
+function getGame2ShuffleCount() {
+    return Math.min(8, 3 + Math.floor(game2CurrentScore / 2));
+}
+
+function getGame2ShuffleSpeed() {
+    return Math.max(180, 420 - game2CurrentScore * 18);
+}
+
+function shuffleCups() {
+    if (!game2Active) return;
+
+    const swapsRemaining = getGame2ShuffleCount();
+
+    const swapDelay = getGame2ShuffleSpeed();
+
+    for (const cup of game2Cups) {
+        cup.style.setProperty('--game2-swap-speed',`${swapDelay}ms`);
     }
 
-    
+    updateMiniGameStatus('game2', 'FOLLOW THE BALL');
+
+    const performSwap = (remaining) => {
+        if (!game2Active) return;
+
+        if (remaining <= 0) {
+            game2AcceptingGuess = true;
+
+            updateMiniGameStatus('game2', 'CHOOSE A CUP');
+            return;
+        }
+
+        const firstCup = Math.floor(Math.random() * GAME2_CUP_COUNT);
+        let secondCup = Math.floor(Math.random() * GAME2_CUP_COUNT);
+
+        while (secondCup === firstCup) {
+            secondCup = Math.floor(Math.random() * GAME2_CUP_COUNT);
+        }
+
+        [game2CupPositions[firstCup], game2CupPositions[secondCup]] = 
+        [game2CupPositions[secondCup], game2CupPositions[firstCup]];
+
+        renderGame2CupPositions();
+        setGame2Timer(() => {performSwap(remaining - 1)}, swapDelay);
+    };
+
+    performSwap(swapsRemaining);
+}
+
+function guessGame2Cup(chosenSlot) {
+    if (!game2Active || !game2AcceptingGuess) {
+        return;
+    }
+
+    game2AcceptingGuess = false;
+
+    const correctSlot = game2CupPositions[game2BallCup];
+    const chosenCup = game2CupPositions.indexOf(chosenSlot);
+
+    // reveal actual answer
+    setGame2BallSlot(correctSlot);
+    game2Ball.classList.add('visible');
+
+    game2Cups[game2BallCup].classList.add('lifted', 'correct');
+
+    if (chosenSlot === correctSlot) {
+        game2CurrentScore++;
+
+        updateMiniGameStatus('game2', 'CORRECT!');
+
+    } else {
+        game2Misses++;
+
+        if (chosenCup !== -1) {
+            game2Cups[chosenCup].classList.add('wrong');
+        }
+        updateMiniGameStatus('game2', 'WRONG!');
+    }
+
+    updateGame2Hud();
+
+    if (game2Misses >= GAME2_MAX_MISSES) {
+        setGame2Timer(endGame2, 1100);
+        return;
+    }
+
+    setGame2Timer(startGame2Round, 1100);
+}
+
+function endGame2() {
+    clearGame2Timers();
+    game2Active = false;
+    game2AcceptingGuess = false;
+
+    if (game2CurrentScore > game2HighScore) {
+        game2HighScore = game2CurrentScore;
+        localStorage.setItem('game2HighScore', game2HighScore);
+    }
+
+    game2FinalScore.textContent = `Score: ${game2CurrentScore}`;
+    game2GameOver.classList.remove('noDisplay');
+
+    updateMiniGameStatus('game2', 'GAME OVER');
+    updateGame2Hud();
+
+    logEntry(`Cup Shuffle ended with a score of ${game2CurrentScore}.`);
+
+    pet.gamePlayedCount2 += 1;
+    saveToLocalStorage();
 }
 
 // game 3 - memory sequence
@@ -2994,7 +3205,6 @@ const makeDeviceButton = ({
             cancelHoldTimer();
 
             holdTimer = setTimeout(() => {
-                if (game1Active == true || game2Active == true || game3Active == true) return
                 holdTimer = null;
                 holdTriggered = true;
                 onHold();
@@ -3191,6 +3401,13 @@ const setScreen = (screenName) => {
     }
 
     if (
+        previousScreen === 'game2' &&
+        screenName !== 'game2'
+    ) {
+        prepareGame2Menu();
+    }
+
+    if (
         previousScreen === 'game3' &&
         screenName !== 'game3'
     ) {
@@ -3222,6 +3439,10 @@ const setScreen = (screenName) => {
 
     if (activeScreen === 'game1') {
         prepareGame1Menu();
+    }
+
+    if (activeScreen === 'game2') {
+        prepareGame2Menu();
     }
 
     if (activeScreen === 'game3') {
@@ -3408,6 +3629,7 @@ const init = () => {
     loadFromLocalstorage();
 
     prepareGame1Menu();
+    prepareGame2Menu();
 
     setScreen('home');
     togglePetSelect();
