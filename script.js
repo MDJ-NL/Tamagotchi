@@ -227,6 +227,7 @@ const previewSprite = document.getElementsByClassName('previewSprite');
 const clockDisplay = document.getElementsByClassName('clock');
 const logWindow = document.getElementById('eventLog');
 const logBtn = document.getElementById('logBtn');
+const logEntries = document.getElementById('eventLogEntries');
 
 // options menu
 const menuBtn = document.getElementById('optionBtn');
@@ -1095,6 +1096,12 @@ const saveToLocalStorage = () => {
 window.onbeforeunload = function () {
     saveToLocalStorage();
 }
+
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        saveToLocalStorage();
+    }
+});
 
 const loadFromLocalstorage = () => {
     const petState = localStorage.getItem('petState');
@@ -1974,14 +1981,14 @@ function logEntry(entry) {
     const newDiv = document.createElement('div');
     newDiv.classList.add('logEntry');
     newDiv.innerHTML = `<p>${entry}</p> <p class="timestamp">${currentTime()}</p>`;
-    logWindow.appendChild(newDiv);
+    logEntries.appendChild(newDiv);
 
-    if (logWindow.children.length > 10) {
-        logWindow.firstElementChild.remove();
+    if (logEntries.children.length > 10) {
+        logEntries.firstElementChild.remove();
     }
 
-    localStorage.setItem('eventLog', logWindow.innerHTML);
-    logWindow.scrollTo(0, logWindow.scrollHeight);
+    localStorage.setItem('eventLog', logEntries.innerHTML);
+    logEntries.scrollTo(0, logEntries.scrollHeight);
 }
 
 // Options menu
@@ -2110,6 +2117,7 @@ const createSelectedPet = () => {
     updateUI();
 
     logEntry(`New pet selected: ${pet.name}`);
+    saveToLocalStorage();
 };
 
 function gameLoop() {
@@ -3623,8 +3631,7 @@ const init = () => {
     tick = 0;
 
     // Restore old log entries before catch-up adds new ones
-    logWindow.innerHTML =
-        localStorage.getItem('eventLog') || '';
+    logEntries.innerHTML = localStorage.getItem('eventLog') || '';
 
     loadFromLocalstorage();
 

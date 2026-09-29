@@ -651,9 +651,16 @@ body{
         border: solid 1px #000;
         width: fit-content;
         max-height: 70vh;
-        overflow-y: auto;
+        
         cursor: move;
         z-index: 20;
+
+        #eventLogEntries {
+            max-height: calc(70vh - 20px);
+            overflow-y: auto;
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;;
+        }
 
         .logEntry {
             border: 1px #000 solid;
